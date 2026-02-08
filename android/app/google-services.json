@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "330227317215",
+    "firebase_url": "https://btcadsmk-default-rtdb.firebaseio.com",
+    "project_id": "btcadsmk",
+    "storage_bucket": "btcadsmk.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:330227317215:android:de235ddc038bc310fe2c6a",
+        "android_client_info": {
+          "package_name": "com.btcgiga.earn.cloudmining.btcmining.giga"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK8W9FEVrJQ_PE2hSGgYxgRPZ5ZFqGwTo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
