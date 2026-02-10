@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../constants/mining_constants.dart';
 import '../theme/app_colors.dart';
 import '../widgets/native_ad_placeholder.dart';
 import 'disclaimer_screen.dart';
@@ -35,29 +34,40 @@ class SettingsScreen extends StatelessWidget {
             subtitle:
             'GIGA ETH Mining • Min. withdraw ~\$100 worth of ETH',
             onTap: () {
-              showAboutDialog(
+              showDialog(
                 context: context,
-                applicationName: 'GIGA ETH Mining',
-                applicationVersion: '1.0.0',
-                applicationLegalese: 'Mine ETH, watch ads for boosts.',
-              );
-            },
-          ),
-          _modernSettingsTile(
-            context,
-            icon: Icons.notifications_outlined,
-            iconColor: AppColors.primary,
-            title: 'Notifications',
-            subtitle: 'Mining start & end alerts',
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications are enabled for mining sessions.'),
+                builder: (context) => AlertDialog(
+                  title: const Text('About'),
+                  content: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GIGA ETH Mining',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text('Version 1.0.0'),
+                      SizedBox(height: 8),
+                      Text(
+                        'Mine ETH, watch ads for boosts.',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('OK'),
+                    ),
+                  ],
                 ),
               );
             },
           ),
-
           const SizedBox(height: 20),
           const NativeAdPlaceholder(),
           const SizedBox(height: 20),

@@ -52,6 +52,18 @@ class _DashboardScreenState extends State<DashboardScreen>
   double get _rigMultiplier => 1.0 + (_stats.rigBonusPercent / 100.0);
   double get _effectiveRate => _baseRate * _boostMultiplier * _rigMultiplier;
 
+  /// Hashrate shown in balance card: computed from effective rate when mining, else from stats.
+  String get _displayHashrate {
+    if (_effectiveRate > 0) {
+      final thPerSec = _effectiveRate * 1e6;
+      if (thPerSec >= 1000) return '${(thPerSec / 1000).toStringAsFixed(2)} PH/s';
+      if (thPerSec >= 1) return '${thPerSec.toStringAsFixed(2)} TH/s';
+      if (thPerSec >= 0.001) return '${(thPerSec * 1000).toStringAsFixed(2)} GH/s';
+      return '${(thPerSec * 1e6).toStringAsFixed(2)} MH/s';
+    }
+    return _stats.hashrate;
+  }
+
   double? _ethPriceUsd;
   List<EthPricePoint> _ethHistory = [];
   bool _ethLoading = true;
@@ -672,7 +684,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               Expanded(
                 child: _buildBalanceMetric(
                   label: 'Hashrate',
-                  value: _stats.hashrate,
+                  value: _displayHashrate,
                 ),
               ),
               Container(

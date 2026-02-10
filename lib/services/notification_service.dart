@@ -38,6 +38,11 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(alert: true, badge: true);
     }
+    if (Platform.isAndroid) {
+      await _plugin
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission();
+    }
     _initialized = true;
     scheduleHourlyReminders();
   }
@@ -100,8 +105,8 @@ class NotificationService {
         'mining_channel',
         'Mining',
         channelDescription: 'Mining session notifications',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
+        importance: Importance.high,
+        priority: Priority.high,
       );
 
   DarwinNotificationDetails get _iosDetails => const DarwinNotificationDetails(

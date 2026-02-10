@@ -41,10 +41,13 @@ class RemoteConfigService {
 
   bool _initialized = false;
 
+  /// Called when config is fetched/updated so ads can reload with new unit IDs from Firebase.
+  void Function()? onConfigUpdated;
+
   Future<void> initialize() async {
     if (_initialized) return;
     await _config.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 10),
+      fetchTimeout: const Duration(seconds: 8),
       minimumFetchInterval: const Duration(minutes: 5),
     ));
     await _config.setDefaults({
@@ -74,8 +77,24 @@ class RemoteConfigService {
       _keyAppOpenAdxIos: 'ca-app-pub-3940256099942544/5575463023',
       _keyAppOpenAdmobIos: 'ca-app-pub-3940256099942544/5575463023',
     });
-    await _config.fetchAndActivate();
     _initialized = true;
+    // Fetch in background so splash doesn't wait. App uses defaults until fetch completes.
+    _fetchInBackground();
+  }
+
+  void _fetchInBackground() {
+    _config
+        .fetchAndActivate()
+        .timeout(const Duration(seconds: 6), onTimeout: () => false)
+        .then((_) {
+      _onConfigUpdated();
+    }).catchError((_) {
+      _onConfigUpdated();
+    });
+  }
+
+  void _onConfigUpdated() {
+    onConfigUpdated?.call();
   }
 
   /// Master switch: when false, no ads are loaded or shown. RC key: ads_enabled

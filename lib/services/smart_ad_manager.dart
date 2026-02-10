@@ -54,6 +54,14 @@ class SmartAdManager {
     instance._sdkInitialized = true;
   }
 
+  /// Call when Firebase Remote Config has been updated so ads use the latest unit IDs.
+  void reloadAdsFromRemoteConfig() {
+    if (!_sdkInitialized) return;
+    loadInterstitial();
+    loadRewarded();
+    loadAppOpen();
+  }
+
   bool get _isAndroid => !kIsWeb && Platform.isAndroid;
   bool get _isIOS => !kIsWeb && Platform.isIOS;
 
@@ -328,6 +336,9 @@ class SmartAdManager {
       setWinner(ad, network);
     }).catchError((_) {
       onFailed?.call();
+      Future.delayed(const Duration(seconds: 15), () {
+        if (!_appOpenLoaded) loadAppOpen();
+      });
     });
     fAdmob.then((ad) {
       if (winner != null && winner != ad) ad.dispose();
@@ -431,6 +442,9 @@ class SmartAdManager {
       setWinner(ad, network);
     }).catchError((_) {
       onFailed?.call();
+      Future.delayed(const Duration(seconds: 15), () {
+        if (!_interstitialLoaded) loadInterstitial();
+      });
     });
     fAdmob.then((ad) {
       if (winner != null && winner != ad) ad.dispose();

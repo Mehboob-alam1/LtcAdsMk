@@ -6,6 +6,13 @@ class MiningConstants {
   /// Withdrawal threshold in USD. User must have mined at least this much worth of ETH.
   static const double withdrawThresholdUsd = 100.0;
 
+  /// When true, minimum balance for withdrawal is ~\$0.01 for dev testing. Production and all test cases use \$100.
+  static const bool withdrawTestMode = false;
+
+  /// Effective minimum withdrawal in USD (lower in test mode).
+  static double get effectiveWithdrawThresholdUsd =>
+      withdrawTestMode ? 0.01 : withdrawThresholdUsd;
+
   /// Reference ETH price (USD) used for monthly cap. ~\$100/month max = this much ETH.
   /// Cap in ETH = withdrawThresholdUsd / referenceEthPriceUsd.
   static const double referenceEthPriceUsd = 3000.0;

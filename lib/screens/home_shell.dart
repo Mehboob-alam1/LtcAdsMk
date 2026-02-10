@@ -85,7 +85,7 @@ class _HomeShellState extends State<HomeShell> {
             const SizedBox(width: 12),
             Flexible(
               child: Text(
-                'GIGA ETH Mining',
+                'GIGA ETH',
                 style: const TextStyle(
                   fontWeight: FontWeight.w800,
                   fontSize: 18,

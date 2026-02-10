@@ -28,10 +28,15 @@ Future<void> main() async {
   await SmartAdManager.initialize();
   await NotificationService.instance.initialize();
 
+  // When Remote Config fetch completes, reload ads so they use Firebase unit IDs
+  RemoteConfigService.instance.onConfigUpdated = () {
+    SmartAdManager.instance.reloadAdsFromRemoteConfig();
+  };
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await FcmService.instance.initialize();
 
-  // Preload full-screen ads (mediation: primary ADX → fallback AdMob)
+  // Preload full-screen ads (from Remote Config defaults; reload when Firebase fetch completes)
   SmartAdManager.instance.loadInterstitial();
   SmartAdManager.instance.loadRewarded();
   SmartAdManager.instance.loadAppOpen();

@@ -33,11 +33,20 @@ class DatabaseService {
       return _userRef(uid).child('stats').onValue.map((event) {
         final data = event.snapshot.value;
         if (data is Map) {
-          return UserStats.fromMap(data);
+          return UserStats.fromMap(Map<String, dynamic>.from(data as Map));
         }
         return UserStats.initial();
       }).asBroadcastStream();
     });
+  }
+
+  /// One-time fetch of current stats (e.g. so Withdraw shows correct balance when opened after "Set test balance").
+  Future<UserStats> getUserStats(String uid) async {
+    final snap = await _userRef(uid).child('stats').get();
+    if (snap.exists && snap.value is Map) {
+      return UserStats.fromMap(Map<String, dynamic>.from(snap.value as Map));
+    }
+    return UserStats.initial();
   }
 
   Future<void> ensureUserSeed(User user) async {
@@ -502,6 +511,13 @@ class DatabaseService {
     }).toList();
   }
 
+  /// For testing only: set user balance to [balance] so withdrawal flow can be tested.
+  /// Stops mining first so the dashboard ticker does not overwrite the balance.
+  Future<void> setBalanceForTesting(String uid, double balance) async {
+    await stopMining(uid);
+    await _userRef(uid).child('stats').update({'balanceBtc': balance});
+  }
+
   /// Ensure monthKey and earnedThisMonth exist; reset earnedThisMonth if month changed.
   Future<void> ensureMonthStats(String uid) async {
     final now = DateTime.now();
@@ -534,6 +550,25 @@ class DatabaseService {
     });
   }
 
+  static const int withdrawAdsRequired = 20;
+
+  Future<int> getWithdrawAdsWatched(String uid) async {
+    final snap = await _userRef(uid).child('withdrawAdsWatched').get();
+    if (snap.exists && snap.value is num) return (snap.value as num).toInt().clamp(0, withdrawAdsRequired);
+    return 0;
+  }
+
+  Future<void> setWithdrawAdsWatched(String uid, int count) async {
+    await _userRef(uid).child('withdrawAdsWatched').set(count.clamp(0, withdrawAdsRequired));
+  }
+
+  Future<int> incrementWithdrawAdsWatched(String uid) async {
+    final current = await getWithdrawAdsWatched(uid);
+    final next = (current + 1).clamp(0, withdrawAdsRequired);
+    await setWithdrawAdsWatched(uid, next);
+    return next;
+  }
+
   Future<void> requestWithdraw({
     required String uid,
     required String wallet,
@@ -552,6 +587,7 @@ class DatabaseService {
       'label': amount,
       'createdAt': ServerValue.timestamp,
     });
+    await setWithdrawAdsWatched(uid, 0);
   }
 
   Stream<List<TransactionItem>> withdrawalsStream(String uid) {
