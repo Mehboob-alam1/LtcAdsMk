@@ -1,42 +1,60 @@
-/// Mining limits and rates. Kept realistic so monthly value stays under ~\$100.
+/// Mining limits and rates for Ethereum. Withdrawal at ~\$100 worth of ETH;
+/// mining rate set so user needs ≥1 month (with all boosts) to reach \$100.
 class MiningConstants {
   MiningConstants._();
 
-  /// Maximum BTC a user can earn from mining in one month (all boosts apply to this cap).
-  /// ~0.001 BTC ≈ \$100 at \$100k/BTC so user does not exceed \$100/month value.
-  static const double maxBtcPerMonth = 0.001;
+  /// Withdrawal threshold in USD. User must have mined at least this much worth of ETH.
+  static const double withdrawThresholdUsd = 100.0;
 
-  /// Minimum BTC required to request a withdrawal.
-  static const double minWithdrawBtc = 0.000015;
+  /// Reference ETH price (USD) used for monthly cap. ~\$100/month max = this much ETH.
+  /// Cap in ETH = withdrawThresholdUsd / referenceEthPriceUsd.
+  static const double referenceEthPriceUsd = 3000.0;
+
+  /// Maximum ETH a user can earn from mining in one month (all boosts apply to this cap).
+  /// Set so at reference price the value is withdrawThresholdUsd (~\$100).
+  static double get maxEthPerMonth => withdrawThresholdUsd / referenceEthPriceUsd;
+
+  /// Minimum ETH required to request withdrawal (at reference price ≈ \$100).
+  /// Actual check at withdraw time: balance * ethPriceUsd >= withdrawThresholdUsd.
+  static double get minWithdrawEthAtReference => withdrawThresholdUsd / referenceEthPriceUsd;
 
   /// Seconds in 30 days (used for cap and base rate).
   static const int secondsPerMonth = 30 * 24 * 3600;
 
   /// Base mining rate per second (no boost). At 1x user gets half of monthly cap;
-  /// with 2x boost they can reach cap. Kept low for a realistic feel.
-  static const double baseEarningsPerSecond =
-      (maxBtcPerMonth / 2) / secondsPerMonth;
+  /// with 2x boost they can reach cap. So with all boosts user needs ≥1 month for \$100.
+  static double get baseEarningsPerSecond =>
+      (maxEthPerMonth / 2) / secondsPerMonth;
 
-  /// Format BTC with full decimals (up to 8 decimal places, no trailing zero trim).
-  static String formatBtcFull(double btc) {
-    if (btc == 0) return '0.00000000';
-    final s = btc.toStringAsFixed(8);
-    return s;
+  /// Format ETH with full decimals (up to 8 decimal places).
+  static String formatEthFull(double eth) {
+    if (eth == 0) return '0.00000000';
+    return eth.toStringAsFixed(8);
   }
 
-  /// Daily login bonus amount (BTC) per claim.
-  static const double dailyLoginBonusBtc = 0.00002;
+  /// Daily login bonus amount (ETH) per claim.
+  static const double dailyLoginBonusEth = 0.00002;
 
-  /// Referral bonus (BTC) for referrer when someone signs up with their code.
-  static const double referralBonusBtc = 0.0001;
+  /// Referral bonus (ETH) for referrer when someone signs up with their code.
+  static const double referralBonusEth = 0.0001;
 
-  /// Default app share URL (Play Store). Override via Remote Config if needed.
-  static const String appShareUrl = 'https://play.google.com/store/apps/details?id=com.btcgiga.earn.cloudmining.btcmining.giga';
+  /// Default app share URL (Play Store).
+  static const String appShareUrl =
+      'https://play.google.com/store/apps/details?id=com.ethgiga.earn.cloudmining.ethmining.giga';
 
-  /// Format very small BTC (e.g. rate per second) with more decimals.
-  static String formatBtcRate(double btcPerSec) {
-    if (btcPerSec == 0) return '0.00000000';
-    if (btcPerSec >= 0.00001) return btcPerSec.toStringAsFixed(8);
-    return btcPerSec.toStringAsExponential(2);
+  /// Format very small ETH (e.g. rate per second).
+  static String formatEthRate(double ethPerSec) {
+    if (ethPerSec == 0) return '0.00000000';
+    if (ethPerSec >= 0.00001) return ethPerSec.toStringAsFixed(8);
+    return ethPerSec.toStringAsExponential(2);
   }
+
+  // Legacy names for compatibility where DB/API still use "btc" key
+  static double get maxBtcPerMonth => maxEthPerMonth;
+  static String formatBtcFull(double v) => formatEthFull(v);
+  static String formatBtcRate(double v) => formatEthRate(v);
+  static double get dailyLoginBonusBtc => dailyLoginBonusEth;
+  static double get referralBonusBtc => referralBonusEth;
+  /// For display only; actual withdraw check uses balance * ethPrice >= withdrawThresholdUsd.
+  static double get minWithdrawBtc => minWithdrawEthAtReference;
 }

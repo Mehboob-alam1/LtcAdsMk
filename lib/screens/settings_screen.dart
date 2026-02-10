@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/mining_constants.dart';
+import '../theme/app_colors.dart';
 import '../widgets/native_ad_placeholder.dart';
 import 'disclaimer_screen.dart';
 import 'privacy_policy_screen.dart';
@@ -17,7 +18,7 @@ class SettingsScreen extends StatelessWidget {
           'Settings',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: const Color(0xFFF9F4F7),
+        backgroundColor: AppColors.surface,
         elevation: 0,
       ),
       body: ListView(
@@ -32,20 +33,20 @@ class SettingsScreen extends StatelessWidget {
             iconColor: Colors.blue,
             title: 'About',
             subtitle:
-            'GIGA BTC Mining • Min. withdraw ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC',
+            'GIGA ETH Mining • Min. withdraw ~\$100 worth of ETH',
             onTap: () {
               showAboutDialog(
                 context: context,
-                applicationName: 'GIGA BTC Mining',
+                applicationName: 'GIGA ETH Mining',
                 applicationVersion: '1.0.0',
-                applicationLegalese: 'Mine BTC, watch ads for boosts.',
+                applicationLegalese: 'Mine ETH, watch ads for boosts.',
               );
             },
           ),
           _modernSettingsTile(
             context,
             icon: Icons.notifications_outlined,
-            iconColor: Colors.orange,
+            iconColor: AppColors.primary,
             title: 'Notifications',
             subtitle: 'Mining start & end alerts',
             onTap: () {

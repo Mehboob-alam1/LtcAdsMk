@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -122,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(32),
                         gradient: RadialGradient(
                           colors: [
-                            Colors.orange.withOpacity(0.15),
+                            AppColors.primary.withOpacity(0.15),
                             Colors.transparent,
                           ],
                         ),
@@ -133,11 +134,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       height: 140,
                       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
                       decoration: BoxDecoration(
-                        gradient: AppGradients.btc,
+                        gradient: AppGradients.eth,
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.orange.withOpacity(0.3),
+                            color: AppColors.primary.withOpacity(0.3),
                             blurRadius: 24,
                             offset: const Offset(0, 12),
                           ),
@@ -148,13 +149,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
-                            Icons.currency_bitcoin,
+                            Icons.diamond_rounded,
                             size: 44,
                             color: Colors.white,
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'BTC MINER',
+                            'ETH MINER',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -199,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFB14FC7).withOpacity(0.3),
+                        color: AppColors.primary.withOpacity(0.3),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -208,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: FilledButton(
                     onPressed: busy ? null : _handleGoogle,
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFB14FC7),
+                      backgroundColor: AppColors.primary,
                       disabledBackgroundColor: Colors.grey.shade300,
                       minimumSize: const Size.fromHeight(56),
                       elevation: 0,
@@ -237,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Icon(
                             Icons.g_mobiledata,
                             size: 24,
-                            color: Color(0xFFB14FC7),
+                            color: AppColors.primary,
                           ),
                         ),
                         const SizedBox(width: 12),

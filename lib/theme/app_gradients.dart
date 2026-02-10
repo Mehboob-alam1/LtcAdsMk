@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 
+import 'app_colors.dart';
+
 class AppGradients {
+  static const eth = LinearGradient(
+    colors: [AppColors.primaryLight, AppColors.primary],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
   static const btc = LinearGradient(
     colors: [Color(0xFFFF7A1A), Color(0xFFE63B3B)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   static const magenta = LinearGradient(
-    colors: [Color(0xFFEB6A9D), Color(0xFF7B47C6)],
+    colors: [AppColors.primaryLight, AppColors.primaryDark],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

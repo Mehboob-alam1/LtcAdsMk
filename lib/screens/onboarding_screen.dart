@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -104,8 +105,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               gradient: active
                                   ? const LinearGradient(
                                 colors: [
-                                  Color(0xFFB14FC7),
-                                  Color(0xFF9C3FB5),
+                                  AppColors.primary,
+                                  AppColors.primaryDark,
                                 ],
                               )
                                   : null,
@@ -159,9 +160,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   onPageChanged: (value) => setState(() => _page = value),
                   children: [
                     OnboardingPage(
-                      title: 'Mine Bitcoin\nEffortlessly',
+                      title: 'Mine Ethereum\nEffortlessly',
                       subtitle:
-                      'Connect to cloud miners and grow your BTC balance with verified mining pools.',
+                      'Connect to cloud miners and grow your ETH balance with verified mining pools.',
                       gradient: AppGradients.btc,
                       icon: Icons.bolt_rounded,
                       pulseAnimation: _pulseAnimation,
@@ -195,15 +196,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     borderRadius: BorderRadius.circular(18),
                     gradient: LinearGradient(
                       colors: [
-                        const Color(0xFFB14FC7),
-                        const Color(0xFF9C3FB5),
+                        AppColors.primary,
+                        AppColors.primaryDark,
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFB14FC7).withOpacity(0.4),
+                        color: AppColors.primary.withOpacity(0.4),
                         blurRadius: 24,
                         offset: const Offset(0, 10),
                       ),

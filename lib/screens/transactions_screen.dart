@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../constants/mining_constants.dart';
+import '../theme/app_colors.dart';
 import '../models/transaction_item.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
@@ -77,7 +78,7 @@ class TransactionsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Reach ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC to request your first withdrawal.',
+                      'Reach ~\$100 worth of ETH to request your first withdrawal.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.grey.shade600,
@@ -266,7 +267,7 @@ class TransactionsScreen extends StatelessWidget {
         return Colors.green.shade700;
       case 'pending':
       case 'processing':
-        return Colors.orange.shade700;
+        return AppColors.primary;
       case 'failed':
       case 'rejected':
         return Colors.red.shade700;

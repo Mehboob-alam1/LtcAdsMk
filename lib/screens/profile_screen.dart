@@ -5,6 +5,8 @@ import '../models/transaction_item.dart';
 import '../models/user_stats.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
 import '../widgets/activity_tile.dart';
 import '../widgets/banner_ad_widget.dart';
@@ -23,21 +25,18 @@ class ProfileScreen extends StatelessWidget {
     final displayName =
         user.displayName ?? (user.isAnonymous ? 'Guest Miner' : 'Miner');
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.screenPaddingH,
+        vertical: AppTheme.screenPaddingV,
+      ),
       children: [
-        // Profile Header Card - Modern & Elegant
+        // Profile Header Card - ETH theme
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: AppTheme.cardPadding,
           decoration: BoxDecoration(
-            gradient: AppGradients.magenta,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.purple.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            gradient: AppGradients.eth,
+            borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+            boxShadow: AppTheme.balanceCardShadow,
           ),
           child: Row(
             children: [
@@ -104,15 +103,15 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: AppTheme.cardSpacing),
         const NativeAdPlaceholder(),
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.sectionSpacing),
 
         // Overview Section Header
         _buildSectionHeader(context, 'Overview', Icons.insights),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
-        // Stats Grid - Modern Cards
+        // Stats Grid - ETH theme cards
         StreamBuilder<UserStats>(
           stream: DatabaseService.instance.statsStream(user.uid),
           builder: (context, statsSnap) {
@@ -120,9 +119,9 @@ class ProfileScreen extends StatelessWidget {
             final balance = stats?.balanceBtc ?? 0.0;
             return _modernInfoCard(
               icon: Icons.account_balance_wallet,
-              iconColor: Colors.green,
+              iconColor: AppColors.success,
               label: 'Lifetime Earnings',
-              value: '${MiningConstants.formatBtcFull(balance)} BTC',
+              value: '${MiningConstants.formatEthFull(balance)} ETH',
             );
           },
         ),
@@ -137,7 +136,7 @@ class ProfileScreen extends StatelessWidget {
                 boostEndsAt is num && (boostEndsAt as num).toInt() > now;
             String boostLabel = 'None';
             IconData boostIcon = Icons.bolt_outlined;
-            Color boostColor = Colors.grey;
+            Color boostColor = AppColors.textSecondary;
 
             if (hasBoost && boostEndsAt is num) {
               final end = DateTime.fromMillisecondsSinceEpoch(
@@ -145,7 +144,7 @@ class ProfileScreen extends StatelessWidget {
               boostLabel =
               '2x until ${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
               boostIcon = Icons.bolt;
-              boostColor = Colors.amber;
+              boostColor = AppColors.primary;
             }
 
             return _modernInfoCard(
@@ -159,17 +158,17 @@ class ProfileScreen extends StatelessWidget {
 
         _modernInfoCard(
           icon: Icons.download,
-          iconColor: Colors.blue,
+          iconColor: AppColors.primary,
           label: 'Min. Withdraw',
           value:
-          '${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC',
+          '~\$100 worth of ETH',
         ),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: AppTheme.sectionSpacing),
 
         // Recent Withdrawals Section
         _buildSectionHeader(context, 'Recent Withdrawals', Icons.history),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
 
         StreamBuilder<List<TransactionItem>>(
           stream: DatabaseService.instance.withdrawalsStream(user.uid),
@@ -177,29 +176,22 @@ class ProfileScreen extends StatelessWidget {
             final withdrawals = wSnap.data ?? [];
             if (withdrawals.isEmpty) {
               return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: Colors.grey.shade200,
-                    width: 1,
-                  ),
-                ),
+                padding: AppTheme.cardPadding,
+                decoration: AppTheme.cardDecoration(color: AppColors.cardTint),
                 child: Row(
                   children: [
                     Icon(
                       Icons.info_outline,
                       size: 18,
-                      color: Colors.grey.shade500,
+                      color: AppColors.textSecondary,
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'No withdrawals yet. Reach ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC to withdraw.',
+                        'No withdrawals yet. Reach ~\$100 worth of ETH to withdraw.',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -236,23 +228,24 @@ class ProfileScreen extends StatelessWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.purple.shade50,
-            borderRadius: BorderRadius.circular(8),
+            color: AppColors.primaryLightBg,
+            borderRadius: BorderRadius.circular(AppTheme.chipRadius),
           ),
           child: Icon(
             icon,
-            size: 16,
-            color: Colors.purple.shade700,
+            size: 18,
+            color: AppColors.primary,
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Text(
           title,
           style: const TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w700,
             fontSize: 18,
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -266,52 +259,39 @@ class ProfileScreen extends StatelessWidget {
     required String value,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.shade200,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: AppTheme.cardPadding,
+      decoration: AppTheme.cardDecoration(),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              color: iconColor.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(AppTheme.chipRadius),
             ),
             child: Icon(
               icon,
               color: iconColor,
-              size: 20,
+              size: 22,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey.shade700,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
               ),
             ),
           ),
           Text(
             value,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: AppColors.textPrimary,
             ),
           ),
         ],

@@ -4,6 +4,8 @@ import '../constants/mining_constants.dart';
 import '../models/leaderboard_entry.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
 
 class LeaderboardScreen extends StatelessWidget {
@@ -13,22 +15,22 @@ class LeaderboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentUid = AuthService.instance.currentUser?.uid;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF5F5F7),
+        backgroundColor: AppColors.appBar,
         elevation: 0,
         title: const Text(
           'Leaderboard',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 22,
-            color: Color(0xFF1A1A2E),
+            color: AppColors.textPrimary,
           ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.pop(context),
-          color: Colors.grey.shade700,
+          color: AppColors.textSecondary,
         ),
       ),
       body: FutureBuilder<List<LeaderboardEntry>>(
@@ -56,27 +58,32 @@ class LeaderboardScreen extends StatelessWidget {
           final top3 = list.take(3).toList();
           final rest = list.length > 3 ? list.sublist(3, list.length > 53 ? 53 : list.length) : <LeaderboardEntry>[];
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.screenPaddingH,
+              12,
+              AppTheme.screenPaddingH,
+              24,
+            ),
             children: [
               const SizedBox(height: 8),
               Text(
                 'Top Miners by Balance',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.grey.shade600,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppTheme.sectionSpacing),
               _TopThreeCards(entries: top3, currentUid: currentUid),
               const SizedBox(height: 24),
               if (rest.isNotEmpty) ...[
                 Text(
                   'All rankings',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.grey.shade800,
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -127,19 +134,19 @@ class _PodiumCard extends StatelessWidget {
   final bool isCurrentUser;
 
   static const _placeColors = [
-    Color(0xFFFFD700), // gold
-    Color(0xFFC0C0C0), // silver
-    Color(0xFFCD7F32), // bronze
+    Color(0xFF497493), // 1st: ETH primary
+    Color(0xFF6B8FA8), // 2nd: ETH light
+    Color(0xFF3A5C73), // 3rd: ETH dark
   ];
-  static const _placeGradients = [
-    LinearGradient(colors: [Color(0xFFFFE55C), Color(0xFFF7931A)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-    LinearGradient(colors: [Color(0xFFE8E8E8), Color(0xFFA8A8A8)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-    LinearGradient(colors: [Color(0xFFE8A857), Color(0xFF8B4513)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+  static final _placeGradients = [
+    LinearGradient(colors: [AppColors.primaryLight, AppColors.primary], begin: Alignment.topLeft, end: Alignment.bottomRight),
+    LinearGradient(colors: [AppColors.primaryLight, AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
+    LinearGradient(colors: [AppColors.primary.withOpacity(0.9), AppColors.primaryDark], begin: Alignment.topLeft, end: Alignment.bottomRight),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final color = place <= 3 ? _placeColors[place - 1] : Colors.grey;
+    final color = place <= 3 ? _placeColors[place - 1] : AppColors.border;
     final gradient = place <= 3 ? _placeGradients[place - 1] : null;
     final height = place == 1 ? 180.0 : (place == 2 ? 160.0 : 150.0);
 
@@ -147,19 +154,19 @@ class _PodiumCard extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         boxShadow: [
           BoxShadow(
-            color: (gradient != null ? color : Colors.grey).withOpacity(0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: (gradient != null ? color : AppColors.border).withOpacity(0.3),
+            blurRadius: 14,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: AppTheme.cardPadding,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -195,7 +202,7 @@ class _PodiumCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${MiningConstants.formatBtcFull(entry.balanceBtc)} BTC',
+                '${MiningConstants.formatEthFull(entry.balanceBtc)} ETH',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.95),
                   fontWeight: FontWeight.w700,
@@ -233,19 +240,13 @@ class _LeaderboardListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: AppTheme.cardPadding,
       decoration: BoxDecoration(
-        color: isCurrentUser ? const Color(0xFFE8E0FF) : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: isCurrentUser ? Border.all(color: const Color(0xFF9B4DCC).withOpacity(0.5), width: 1.5) : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: isCurrentUser ? AppColors.primaryLightBg : AppColors.card,
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        border: isCurrentUser ? Border.all(color: AppColors.primary.withOpacity(0.5), width: 1.5) : Border.all(color: AppColors.border),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Row(
         children: [
@@ -256,7 +257,7 @@ class _LeaderboardListTile extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 15,
-                color: Colors.grey.shade700,
+                color: AppColors.textSecondary,
               ),
             ),
           ),
@@ -270,22 +271,22 @@ class _LeaderboardListTile extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: isCurrentUser ? FontWeight.bold : FontWeight.w600,
                     fontSize: 15,
-                    color: const Color(0xFF1A1A2E),
+                    color: AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (isCurrentUser)
-                  const Text('You', style: TextStyle(fontSize: 11, color: Color(0xFF7B47C6), fontWeight: FontWeight.w600)),
+                  const Text('You', style: TextStyle(fontSize: 11, color: AppColors.primary, fontWeight: FontWeight.w600)),
               ],
             ),
           ),
           Text(
-            '${MiningConstants.formatBtcFull(entry.balanceBtc)} BTC',
+            '${MiningConstants.formatEthFull(entry.balanceBtc)} ETH',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13,
-              color: Color(0xFF2E123B),
+              color: AppColors.textPrimary,
             ),
           ),
         ],

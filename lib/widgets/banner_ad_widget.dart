@@ -4,7 +4,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../services/remote_config_service.dart';
 import '../services/smart_ad_manager.dart';
 
-/// Banner ad via [SmartAdManager]: primary ADX, fallback AdMob. IDs from Remote Config.
+/// Banner ad via [SmartAdManager]: loads from both AdMob and AdX; shows whichever loads first.
 class BannerAdWidget extends StatefulWidget {
   const BannerAdWidget({super.key});
 
@@ -13,7 +13,7 @@ class BannerAdWidget extends StatefulWidget {
 }
 
 class _BannerAdWidgetState extends State<BannerAdWidget> {
-  BannerAd? _bannerAd;
+  AdWithView? _bannerAd;
   bool _loaded = false;
 
   @override

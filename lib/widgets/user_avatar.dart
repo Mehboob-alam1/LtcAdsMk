@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
+import '../theme/app_colors.dart';
 
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
@@ -32,8 +33,8 @@ class UserAvatar extends StatelessWidget {
             ? null
             : const LinearGradient(
           colors: [
-            Color(0xFFE3C8F2),
-            Color(0xFFD4B5E8),
+            AppColors.primaryLightBg,
+            AppColors.primaryLight,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -46,7 +47,7 @@ class UserAvatar extends StatelessWidget {
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.purple.withOpacity(0.15),
+            color: AppColors.primary.withOpacity(0.15),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -79,8 +80,8 @@ class UserAvatar extends StatelessWidget {
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color(0xFFE3C8F2),
-            Color(0xFFD4B5E8),
+            AppColors.primaryLightBg,
+            AppColors.primaryLight,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -91,7 +92,7 @@ class UserAvatar extends StatelessWidget {
           initials.toUpperCase(),
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF5E2B80),
+            color: AppColors.primaryDark,
             fontSize: size * 0.4,
           ),
         ),

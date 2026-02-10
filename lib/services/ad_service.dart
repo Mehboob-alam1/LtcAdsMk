@@ -3,7 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'smart_ad_manager.dart';
 
-/// Facade for rewarded and interstitial ads. Delegates to [SmartAdManager] (ADX primary, AdMob fallback).
+/// Facade for rewarded and interstitial ads. Delegates to [SmartAdManager] (loads both AdMob and AdX per slot; shows whichever loads first).
 class AdService {
   AdService._();
 

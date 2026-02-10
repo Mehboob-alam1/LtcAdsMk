@@ -2,18 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>146428877943-jr252j7kk1bfcepcdkju0fc3lpjrtfdv.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.146428877943-jr252j7kk1bfcepcdkju0fc3lpjrtfdv</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAyPMLxj43b5hh8D6-nTybOqP92tpQ--RY</string>
+	<string>AIzaSyACXXTsS6_sczyq2FzII1jAv7v3SR2875Q</string>
 	<key>GCM_SENDER_ID</key>
-	<string>330227317215</string>
+	<string>146428877943</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.btcgiga.earn.cloudmining.btcmining.giga</string>
+	<string>com.ethgiga.earn.cloudmining.ethmining.giga</string>
 	<key>PROJECT_ID</key>
-	<string>btcadsmk</string>
+	<string>ethadsmk</string>
 	<key>STORAGE_BUCKET</key>
-	<string>btcadsmk.firebasestorage.app</string>
+	<string>ethadsmk.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,8 +29,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:330227317215:ios:1906c1d3538ea9c5fe2c6a</string>
+	<string>1:146428877943:ios:e3ec747300d746f7efba72</string>
 	<key>DATABASE_URL</key>
-	<string>https://btcadsmk-default-rtdb.firebaseio.com</string>
+	<string>https://ethadsmk-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

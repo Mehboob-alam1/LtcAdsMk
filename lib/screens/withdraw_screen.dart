@@ -4,6 +4,9 @@ import '../constants/mining_constants.dart';
 import '../services/ad_service.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../services/eth_price_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/native_ad_placeholder.dart';
@@ -17,17 +20,24 @@ class WithdrawScreen extends StatefulWidget {
 
 class _WithdrawScreenState extends State<WithdrawScreen> {
   final _walletController = TextEditingController();
-  final _networkController = TextEditingController(text: 'Bitcoin');
+  final _networkController = TextEditingController(text: 'Ethereum');
   final _amountController = TextEditingController();
   bool _loading = false;
   double? _currentBalance;
+  double? _ethPriceUsd;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AdService.instance.tryShowInterstitialRandomly();
+      _loadEthPrice();
     });
+  }
+
+  Future<void> _loadEthPrice() async {
+    final price = await EthPriceService.instance.getCurrentPrice();
+    if (mounted) setState(() => _ethPriceUsd = price);
   }
 
   @override
@@ -36,6 +46,16 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     _networkController.dispose();
     _amountController.dispose();
     super.dispose();
+  }
+
+  double? get _minEthForWithdraw {
+    if (_ethPriceUsd == null || _ethPriceUsd! <= 0) return null;
+    return MiningConstants.withdrawThresholdUsd / _ethPriceUsd!;
+  }
+
+  bool _canWithdraw(double balance) {
+    if (_ethPriceUsd == null || _ethPriceUsd! <= 0) return false;
+    return balance * _ethPriceUsd! >= MiningConstants.withdrawThresholdUsd;
   }
 
   Future<void> _submit() async {
@@ -48,13 +68,16 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       );
       return;
     }
-    final amountStr = _amountController.text.trim().replaceAll(RegExp(r'\s*BTC\s*', caseSensitive: false), '').trim();
+    final amountStr = _amountController.text.trim().replaceAll(RegExp(r'\s*ETH\s*', caseSensitive: false), '').trim();
     final amount = double.tryParse(amountStr);
-    if (amount == null || amount < MiningConstants.minWithdrawBtc) {
+    final minEth = _minEthForWithdraw;
+    if (amount == null || minEth == null || amount < minEth) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Minimum withdrawal is ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC.',
+            minEth != null
+                ? 'Minimum withdrawal is ~\$${MiningConstants.withdrawThresholdUsd.toStringAsFixed(0)} worth (${MiningConstants.formatEthFull(minEth)} ETH).'
+                : 'Loading price…',
           ),
         ),
       );
@@ -72,7 +95,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       uid: user.uid,
       wallet: _walletController.text.trim(),
       network: _networkController.text.trim(),
-      amount: '$amountStr BTC',
+      amount: '$amountStr ETH',
     );
     if (!mounted) return;
     setState(() => _loading = false);
@@ -89,7 +112,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Withdraw'),
-        backgroundColor: const Color(0xFFF9F4F7),
+        backgroundColor: AppColors.surface,
       ),
       body: StreamBuilder(
         stream: AuthService.instance.currentUser != null
@@ -98,30 +121,35 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
         builder: (context, snap) {
           _currentBalance = snap.data?.balanceBtc;
           final balance = _currentBalance ?? 0.0;
-          final canWithdraw = balance >= MiningConstants.minWithdrawBtc;
+          final canWithdraw = _canWithdraw(balance);
+          final minEth = _minEthForWithdraw;
+          final balanceUsd = _ethPriceUsd != null ? balance * _ethPriceUsd! : null;
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
               Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: AppGradients.btc,
-                  borderRadius: BorderRadius.circular(22),
-                ),
+        padding: AppTheme.cardPadding,
+        decoration: BoxDecoration(
+          gradient: AppGradients.eth,
+          borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+          boxShadow: AppTheme.balanceCardShadow,
+        ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Withdraw BTC to your wallet securely.',
+                      'Withdraw ETH when balance is ~\$100 worth.',
                       style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Balance: ${MiningConstants.formatBtcFull(balance)} BTC',
+                      'Balance: ${MiningConstants.formatEthFull(balance)} ETH${balanceUsd != null ? ' (≈ \$${balanceUsd.toStringAsFixed(2)})' : ''}',
                       style: const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     Text(
-                      'Min. withdraw: ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC',
+                      minEth != null
+                          ? 'Min. withdraw: ~\$${MiningConstants.withdrawThresholdUsd.toStringAsFixed(0)} (${MiningConstants.formatEthFull(minEth)} ETH)'
+                          : 'Min. withdraw: ~\$100 worth of ETH',
                       style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                   ],
@@ -130,32 +158,32 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               const SizedBox(height: 20),
               const NativeAdPlaceholder(),
               const SizedBox(height: 20),
-              if (!canWithdraw)
+              if (!canWithdraw && minEth != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'Keep mining! You need ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc - balance)} BTC more to withdraw.',
-                    style: const TextStyle(color: Color(0xFFB14FC7), fontWeight: FontWeight.w600),
+                    'Keep mining! You need ${MiningConstants.formatEthFull((minEth - balance).clamp(0.0, double.infinity))} ETH more to reach ~\$100.',
+                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                   ),
                 ),
               AppTextField(label: 'Wallet Address', controller: _walletController),
               const SizedBox(height: 12),
               AppTextField(
                 label: 'Network',
-                hint: 'Bitcoin',
+                hint: 'Ethereum',
                 controller: _networkController,
               ),
               const SizedBox(height: 12),
               AppTextField(
-                label: 'Amount (min ${MiningConstants.formatBtcFull(MiningConstants.minWithdrawBtc)} BTC)',
-                hint: '0.00001500 BTC',
+                label: minEth != null ? 'Amount (min ${MiningConstants.formatEthFull(minEth)} ETH)' : 'Amount (ETH)',
+                hint: '0.03 ETH',
                 controller: _amountController,
               ),
           const SizedBox(height: 20),
           FilledButton(
             onPressed: (_loading || !canWithdraw) ? null : _submit,
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFFB14FC7),
+              backgroundColor: AppColors.primary,
               minimumSize: const Size.fromHeight(52),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),

@@ -6,6 +6,8 @@ import '../constants/mining_constants.dart';
 import '../models/user_stats.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
 import '../widgets/reward_tile.dart';
 import 'leaderboard_screen.dart';
@@ -37,7 +39,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
       if (claimed) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Daily bonus claimed! +${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} BTC'),
+            content: Text('Daily bonus claimed! +${MiningConstants.formatEthFull(MiningConstants.dailyLoginBonusEth)} ETH'),
             backgroundColor: Colors.green.shade700,
             behavior: SnackBarBehavior.floating,
           ),
@@ -92,7 +94,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Referral applied! +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} BTC to your referrer.'),
+          content: Text('Referral applied! +${MiningConstants.formatEthFull(MiningConstants.referralBonusEth)} ETH to your referrer.'),
           backgroundColor: Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -114,16 +116,16 @@ class _RewardsScreenState extends State<RewardsScreen> {
       return const Center(child: Text('Sign in to view rewards.'));
     }
     return Scaffold(
-      backgroundColor: const Color(0xFFFAF8FB),
+      backgroundColor: AppColors.surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFAF8FB),
+        backgroundColor: AppColors.appBar,
         elevation: 0,
         title: const Text(
           'Rewards',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
             fontSize: 22,
-            color: Color(0xFF1A1A2E),
+            color: AppColors.textPrimary,
           ),
         ),
         leading: IconButton(
@@ -138,21 +140,22 @@ class _RewardsScreenState extends State<RewardsScreen> {
           final stats = snapshot.data ?? UserStats.initial();
           final canClaim = _canClaimDaily(stats);
           return ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppTheme.screenPaddingH),
             children: [
-              // Reward Streak card
+              // Reward Streak card - ETH tint
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: AppTheme.cardPadding,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.emerald,
-                  borderRadius: BorderRadius.circular(22),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.teal.withOpacity(0.3),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primaryLight,
+                      AppColors.primary,
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+                  boxShadow: AppTheme.balanceCardShadow,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,21 +181,23 @@ class _RewardsScreenState extends State<RewardsScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppTheme.sectionSpacing),
               // Daily Login card
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: AppTheme.cardPadding,
                 decoration: BoxDecoration(
-                  gradient: canClaim ? AppGradients.magenta : LinearGradient(
-                    colors: [Colors.grey.shade300, Colors.grey.shade400],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(22),
+                  gradient: canClaim
+                      ? AppGradients.eth
+                      : LinearGradient(
+                          colors: [AppColors.border, AppColors.textSecondary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                  borderRadius: BorderRadius.circular(AppTheme.cardRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: (canClaim ? Colors.purple : Colors.grey).withOpacity(0.3),
-                      blurRadius: 14,
+                      color: (canClaim ? AppColors.primary : AppColors.border).withOpacity(0.25),
+                      blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -237,7 +242,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '+${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} BTC',
+                      '+${MiningConstants.formatEthFull(MiningConstants.dailyLoginBonusEth)} ETH',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -251,7 +256,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                         onPressed: _claiming ? null : () => _claimDailyLogin(user.uid),
                         style: FilledButton.styleFrom(
                           backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF7B47C6),
+                          foregroundColor: AppColors.primary,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
@@ -309,7 +314,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
-                                    color: Color(0xFF1A1A2E),
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -334,7 +339,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                 builder: (context, codeSnap) {
                   final code = codeSnap.data ?? '------';
                   final appLink = '${MiningConstants.appShareUrl}?ref=$code';
-                  final shareText = 'Join GIGA BTC Mining and earn! Use my referral code: $code\n$appLink';
+                  final shareText = 'Join GIGA ETH Mining and earn! Use my referral code: $code\n$appLink';
                   return Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -376,7 +381,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Share your code. You earn +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} BTC per referral.',
+                          'Share your code. You earn +${MiningConstants.formatEthFull(MiningConstants.referralBonusEth)} ETH per referral.',
                           style: TextStyle(color: Colors.white.withOpacity(0.95), fontSize: 13),
                         ),
                         const SizedBox(height: 16),
@@ -421,7 +426,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                 child: FilledButton.icon(
                                   onPressed: () async {
                                     try {
-                                      await Share.share(shareText, subject: 'GIGA BTC Mining - Referral');
+                                      await Share.share(shareText, subject: 'GIGA ETH Mining - Referral');
                                     } catch (e) {
                                       if (context.mounted) {
                                         await Clipboard.setData(ClipboardData(text: shareText));
@@ -465,7 +470,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
               const RewardTile(
                 title: 'Referral Pack',
                 subtitle: 'Invite 3 friends',
-                value: '+0.00020 BTC',
+                value: '+0.00020 ETH',
               ),
               const RewardTile(
                 title: 'Loyalty Tier',

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
+import '../theme/app_gradients.dart';
 import '../services/ad_service.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
@@ -36,26 +39,21 @@ class _HomeShellState extends State<HomeShell> {
     return Scaffold(
       drawer: const AppDrawer(),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF9F4F7),
+        backgroundColor: AppColors.appBar,
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
             icon: Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(AppTheme.chipRadius),
+                border: Border.all(color: AppColors.border),
+                boxShadow: AppTheme.cardShadow,
               ),
               child: const Icon(
                 Icons.menu_rounded,
-                size: 20,
+                size: 22,
               ),
             ),
             onPressed: () => Scaffold.of(context).openDrawer(),
@@ -66,35 +64,32 @@ class _HomeShellState extends State<HomeShell> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFF7931A), Color(0xFFFFB84D)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(8),
+                gradient: AppGradients.eth,
+                borderRadius: BorderRadius.circular(AppTheme.chipRadius),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFF7931A).withOpacity(0.3),
+                    color: AppColors.primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
               child: const Icon(
-                Icons.currency_bitcoin,
+                Icons.diamond_rounded,
                 color: Colors.white,
-                size: 18,
+                size: 20,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Flexible(
               child: Text(
-                'GIGA BTC Mining',
+                'GIGA ETH Mining',
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w800,
                   fontSize: 18,
+                  color: AppColors.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -110,7 +105,7 @@ class _HomeShellState extends State<HomeShell> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purple.withOpacity(0.2),
+                    color: AppColors.primary.withOpacity(0.2),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -124,11 +119,12 @@ class _HomeShellState extends State<HomeShell> {
       body: _screens[_index],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
+          border: Border(top: BorderSide(color: AppColors.border)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
+              color: AppColors.primary.withOpacity(0.04),
+              blurRadius: 16,
               offset: const Offset(0, -4),
             ),
           ],
@@ -155,19 +151,19 @@ class _HomeShellState extends State<HomeShell> {
                   icon: Icons.shopping_bag_rounded,
                   label: 'Shop',
                   index: 2,
-                  color: const Color(0xFFF7931A),
+                  color: AppColors.primary,
                 ),
                 _buildNavItem(
                   icon: Icons.receipt_long_rounded,
                   label: 'History',
                   index: 3,
-                  color: const Color(0xFF9C27B0),
+                  color: AppColors.primary,
                 ),
                 _buildNavItem(
                   icon: Icons.person_rounded,
                   label: 'Profile',
                   index: 4,
-                  color: const Color(0xFFB14FC7),
+                  color: AppColors.primary,
                 ),
               ],
             ),

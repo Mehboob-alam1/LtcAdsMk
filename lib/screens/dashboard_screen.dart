@@ -11,8 +11,10 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/ad_service.dart';
-import '../services/btc_price_service.dart';
+import '../services/eth_price_service.dart';
 import '../services/notification_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
 import '../widgets/activity_tile.dart';
 import '../widgets/banner_ad_widget.dart';
@@ -50,9 +52,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   double get _rigMultiplier => 1.0 + (_stats.rigBonusPercent / 100.0);
   double get _effectiveRate => _baseRate * _boostMultiplier * _rigMultiplier;
 
-  double? _btcPriceUsd;
-  List<BtcPricePoint> _btcHistory = [];
-  bool _btcLoading = true;
+  double? _ethPriceUsd;
+  List<EthPricePoint> _ethHistory = [];
+  bool _ethLoading = true;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -88,7 +90,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
     });
 
-    _miningSub = DatabaseService.instance.miningStream(user.uid).listen((data) {
+    void applyMiningState(Map<String, dynamic> data) {
       final active = data['active'] == true;
       final startedAt = data['startedAt'];
       final balanceAtStart = data['balanceAtStart'];
@@ -110,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           _boostEndsAtMs = (boostEnds is num) ? boostEnds.toInt() : null;
           _sessionEndsAtMs = (sessionEnds is num) ? sessionEnds.toInt() : null;
           _sessionDurationHours =
-          (sessionHours is num) ? sessionHours.toInt() : 4;
+              (sessionHours is num) ? sessionHours.toInt() : 4;
           if (!active) {
             _liveBalance = _stats.balanceBtc;
             _liveUptime = _stats.sessionUptime;
@@ -118,27 +120,32 @@ class _DashboardScreenState extends State<DashboardScreen>
           }
         });
       }
-      if (_miningActive) {
+      if (active) {
         _startTicker();
       } else {
         _stopTicker();
       }
-    });
+    }
 
-    _loadBtcPrice();
+    // Load current mining state immediately so button state is correct when returning to dashboard
+    DatabaseService.instance.getMiningState(user.uid).then(applyMiningState);
+
+    _miningSub = DatabaseService.instance.miningStream(user.uid).listen(applyMiningState);
+
+    _loadEthPrice();
     AdService.instance.loadRewardedAd();
     AdService.instance.loadInterstitialAd();
   }
 
-  Future<void> _loadBtcPrice() async {
-    setState(() => _btcLoading = true);
-    final price = await BtcPriceService.instance.getCurrentPrice();
-    final history = await BtcPriceService.instance.getPriceHistory(days: 7);
+  Future<void> _loadEthPrice() async {
+    setState(() => _ethLoading = true);
+    final price = await EthPriceService.instance.getCurrentPrice();
+    final history = await EthPriceService.instance.getPriceHistory(days: 7);
     if (mounted) {
       setState(() {
-        _btcPriceUsd = price;
-        _btcHistory = history;
-        _btcLoading = false;
+        _ethPriceUsd = price;
+        _ethHistory = history;
+        _ethLoading = false;
       });
     }
   }
@@ -495,49 +502,42 @@ class _DashboardScreenState extends State<DashboardScreen>
         : 0.0;
 
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFFAFAFA),
-            Color(0xFFF5F5F7),
-            Color(0xFFFFFFFF),
-          ],
-        ),
-      ),
+      color: AppColors.surface,
       child: LayoutBuilder(
         builder: (context, constraints) {
           return SizedBox(
             height: constraints.maxHeight,
             child: ListView(
               key: const PageStorageKey<String>('dashboard_list'),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.screenPaddingH,
+                vertical: AppTheme.screenPaddingV,
+              ),
               physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
               children: [
                 _buildHeader(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.sectionSpacing),
                 _buildBalanceCard(),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.cardSpacing),
                 _buildBtcPriceCard(),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.cardSpacing),
                 _buildMiningPowerCard(monthCapProgress),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.cardSpacing),
                 if (RemoteConfigService.instance.rewardedAdsEnabled) ...[
                   _buildBoostSection(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppTheme.sectionSpacing),
                 ],
                 _buildMiningButton(),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.sectionSpacing),
                 const NativeAdPlaceholder(key: ValueKey('dashboard_native_ad')),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.cardSpacing),
                 KeyedSubtree(
                   key: ValueKey('activity_${user.uid}'),
                   child: _buildActivitySection(user.uid),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: AppTheme.sectionSpacing),
                 const BannerAdWidget(key: ValueKey('dashboard_banner')),
-                const SizedBox(height: 12),
+                const SizedBox(height: AppTheme.cardSpacing),
               ],
             ),
           );
@@ -548,25 +548,25 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Dashboard',
             style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
-              color: Colors.grey.shade900,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
-            'Monitor your mining activity',
+            'Monitor your ETH mining activity',
             style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey.shade600,
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -576,26 +576,8 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildBalanceCard() {
     return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1A2E),
-            Color(0xFF16213E),
-            Color(0xFF0F3460),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      padding: AppTheme.cardPadding,
+      decoration: AppTheme.balanceCardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -603,7 +585,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Total Balance',
+                _miningActive ? 'Total Balance (updating)' : 'Total Balance',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.7),
                   fontSize: 13,
@@ -613,14 +595,14 @@ class _DashboardScreenState extends State<DashboardScreen>
               if (_miningActive)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: 10,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00FF88).withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.success.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(AppTheme.chipRadius),
                     border: Border.all(
-                      color: const Color(0xFF00FF88).withOpacity(0.3),
+                      color: AppColors.success.withOpacity(0.4),
                       width: 1,
                     ),
                   ),
@@ -628,18 +610,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        width: 5,
-                        height: 5,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF00FF88),
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       const Text(
                         'Live',
                         style: TextStyle(
-                          color: Color(0xFF00FF88),
+                          color: AppColors.success,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -665,7 +647,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                'BTC',
+                'ETH',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.6),
                   fontWeight: FontWeight.w600,
@@ -674,10 +656,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
-          if (_btcPriceUsd != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              '≈ \$${(_liveBalance * _btcPriceUsd!).toStringAsFixed(2)} USD',
+          if (_ethPriceUsd != null) ...[
+              const SizedBox(height: 4),
+              Text(
+              '≈ \$${(_liveBalance * _ethPriceUsd!).toStringAsFixed(2)} USD',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 13,
@@ -741,18 +723,8 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildBtcPriceCard() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      padding: AppTheme.cardPadding,
+      decoration: AppTheme.cardDecoration(),
       child: Column(
         children: [
           Row(
@@ -761,98 +733,100 @@ class _DashboardScreenState extends State<DashboardScreen>
               Row(
                 children: [
                   Container(
-                    width: 36,
-                    height: 36,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFF7931A), Color(0xFFFFAD33)],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
+                      gradient: AppGradients.eth,
+                      borderRadius: BorderRadius.circular(AppTheme.chipRadius),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Center(
-                      child: Text(
-                        '₿',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Icon(
+                        Icons.diamond_rounded,
+                        color: Colors.white,
+                        size: 22,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Bitcoin',
+                        'Ethereum',
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1A2E),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                       Text(
-                        'BTC / USD',
+                        'ETH / USD',
                         style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey.shade500,
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              if (_btcLoading)
+              if (_ethLoading)
                 SizedBox(
-                  width: 18,
-                  height: 18,
+                  width: 20,
+                  height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.grey.shade400,
+                    color: AppColors.primary,
                   ),
                 )
               else
                 Text(
-                  _btcPriceUsd != null
-                      ? '\$${_btcPriceUsd!.toStringAsFixed(2)}'
+                  _ethPriceUsd != null
+                      ? '\$${_ethPriceUsd!.toStringAsFixed(2)}'
                       : '—',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
-                    fontSize: 17,
-                    color: Color(0xFF1A1A2E),
+                    fontSize: 18,
+                    color: AppColors.textPrimary,
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
-            height: 80,
-            child: _btcHistory.isEmpty
+            height: 84,
+            child: _ethHistory.isEmpty
                 ? Center(
-              child: _btcLoading
-                  ? CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.grey.shade400,
-              )
-                  : Text(
-                'No chart data',
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 12,
-                ),
-              ),
-            )
-                : _buildBtcChart(),
+                    child: _ethLoading
+                        ? CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primary,
+                          )
+                        : Text(
+                            'No chart data',
+                            style: TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                  )
+                : _buildEthChart(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBtcChart() {
-    if (_btcHistory.isEmpty) return const SizedBox.shrink();
-    final points = _btcHistory;
+  Widget _buildEthChart() {
+    if (_ethHistory.isEmpty) return const SizedBox.shrink();
+    final points = _ethHistory;
     final minY = points.map((e) => e.priceUsd).reduce((a, b) => a < b ? a : b);
     final maxY = points.map((e) => e.priceUsd).reduce((a, b) => a > b ? a : b);
     final span = (maxY - minY).clamp(1.0, double.infinity);
@@ -873,7 +847,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            color: const Color(0xFFF7931A),
+            color: AppColors.chartAccent,
             barWidth: 2.5,
             isStrokeCapRound: true,
             dotData: const FlDotData(show: false),
@@ -883,8 +857,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFFF7931A).withOpacity(0.15),
-                  const Color(0xFFF7931A).withOpacity(0.0),
+                  AppColors.chartAccent.withOpacity(0.15),
+                  AppColors.chartAccent.withOpacity(0.0),
                 ],
               ),
             ),
@@ -910,36 +884,27 @@ class _DashboardScreenState extends State<DashboardScreen>
     final isCapped = _earnedThisMonth >= MiningConstants.maxBtcPerMonth;
 
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      padding: AppTheme.cardPadding,
+      decoration: AppTheme.cardDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Mining Stats',
             style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A2E),
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (_miningActive && _sessionEndsAtMs != null) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F8FA),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.cardTint,
+                borderRadius: BorderRadius.circular(AppTheme.chipRadius),
+                border: Border.all(color: AppColors.border),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -948,7 +913,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     children: [
                       Icon(
                         Icons.access_time,
-                        color: Colors.grey.shade600,
+                        color: AppColors.textSecondary,
                         size: 16,
                       ),
                       const SizedBox(width: 6),
@@ -957,7 +922,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ],
@@ -967,7 +932,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
-                      color: Color(0xFF0F3460),
+                      color: AppColors.primaryDark,
                     ),
                   ),
                 ],
@@ -1017,7 +982,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ],
           const SizedBox(height: 14),
-          Divider(height: 1, color: Colors.grey.shade200),
+          Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1026,7 +991,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 'Monthly cap',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade600,
+                  color: AppColors.textSecondary,
                 ),
               ),
               Text(
@@ -1034,7 +999,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1A1A2E),
+                  color: AppColors.textPrimary,
                 ),
               ),
             ],
@@ -1046,9 +1011,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               height: 6,
               child: LinearProgressIndicator(
                 value: monthCapProgress,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: AppColors.border,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isCapped ? const Color(0xFFE53935) : const Color(0xFF0F3460),
+                  isCapped ? const Color(0xFFE53935) : AppColors.primaryDark,
                 ),
               ),
             ),
@@ -1066,7 +1031,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           label,
           style: TextStyle(
             fontSize: 13,
-            color: Colors.grey.shade600,
+            color: AppColors.textSecondary,
           ),
         ),
         Text(
@@ -1074,7 +1039,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1A2E),
+            color: AppColors.textPrimary,
           ),
         ),
       ],
@@ -1095,7 +1060,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A2E),
+              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -1245,23 +1210,23 @@ class _DashboardScreenState extends State<DashboardScreen>
         decoration: BoxDecoration(
           gradient: isCapped
               ? LinearGradient(
-            colors: [Colors.grey.shade400, Colors.grey.shade500],
+            colors: [AppColors.border, AppColors.textSecondary],
           )
               : _miningActive
               ? const LinearGradient(
             colors: [Color(0xFF00C853), Color(0xFF00E676)],
           )
               : const LinearGradient(
-            colors: [Color(0xFF0F3460), Color(0xFF16213E)],
+            colors: [AppColors.primary, AppColors.primaryDark],
           ),
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
               color: (isCapped
-                  ? Colors.grey.shade400
+                  ? AppColors.textSecondary
                   : _miningActive
                   ? const Color(0xFF00C853)
-                  : const Color(0xFF0F3460))
+                  : AppColors.primaryDark)
                   .withOpacity(0.25),
               blurRadius: 12,
               offset: const Offset(0, 4),
@@ -1292,7 +1257,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       padding: const EdgeInsets.only(right: 8),
                       child: Icon(
                         Icons.power_settings_new,
-                        color: isCapped ? Colors.grey.shade700 : Colors.white,
+                        color: isCapped ? AppColors.textSecondary : Colors.white,
                         size: 20,
                       ),
                     ),
@@ -1300,14 +1265,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                     isCapped
                         ? 'Monthly cap reached'
                         : _miningActive
-                        ? 'Stop Mining'
+                        ? 'Mining'
                         : 'Start Mining',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
-                      color: isCapped ? Colors.grey.shade800 : Colors.white,
+                      color: isCapped ? AppColors.textPrimary : Colors.white,
                     ),
                   ),
+                  if (_miningActive && !isCapped)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Text(
+                        '(tap to stop)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withOpacity(0.85),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -1328,7 +1305,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A2E),
+              color: AppColors.textPrimary,
             ),
           ),
         ),
@@ -1342,31 +1319,21 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             if (activities.isEmpty) {
               return Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
+                padding: AppTheme.cardPadding,
+                decoration: AppTheme.cardDecoration(),
                 child: Center(
                   child: Column(
                     children: [
                       Icon(
                         Icons.inbox_outlined,
                         size: 40,
-                        color: Colors.grey.shade300,
+                        color: AppColors.border,
                       ),
                       const SizedBox(height: 10),
                       Text(
                         'No activity yet',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: AppColors.textSecondary,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
@@ -1375,7 +1342,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       Text(
                         'Start mining to see activity',
                         style: TextStyle(
-                          color: Colors.grey.shade500,
+                          color: AppColors.textSecondary,
                           fontSize: 12,
                         ),
                       ),

@@ -14,7 +14,7 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._();
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  /// Base mining rate (BTC/sec). Max 0.000014 BTC/month with boosts; controlled by MiningConstants.
+  /// Base mining rate (ETH/sec). Max ~\$100/month with boosts; controlled by MiningConstants.
   static double get miningEarningsPerSecond => MiningConstants.baseEarningsPerSecond;
 
   DatabaseReference _userRef(String uid) => _db.ref('users/$uid');
@@ -171,7 +171,7 @@ class DatabaseService {
     await statsRef.update({'balanceBtc': current + MiningConstants.referralBonusBtc});
     await _userRef(referrerUid).child('activity').push().set({
       'type': 'referral',
-      'label': 'Referral bonus +${MiningConstants.referralBonusBtc} BTC',
+      'label': 'Referral bonus +${MiningConstants.referralBonusEth} ETH',
       'createdAt': ServerValue.timestamp,
     });
     return true;
@@ -283,6 +283,16 @@ class DatabaseService {
       'label': 'Stop Mining',
       'createdAt': ServerValue.timestamp,
     });
+  }
+
+  /// One-time read of current mining state (e.g. to restore button state when returning to dashboard).
+  Future<Map<String, dynamic>> getMiningState(String uid) async {
+    final snap = await _userRef(uid).child('mining').get();
+    final data = snap.value;
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {'active': false, 'startedAt': null, 'sessionEndsAt': null};
   }
 
   Stream<Map<String, dynamic>> miningStream(String uid) {
@@ -453,7 +463,7 @@ class DatabaseService {
     });
     await _userRef(uid).child('activity').push().set({
       'type': 'daily_login',
-      'label': 'Daily login +${MiningConstants.dailyLoginBonusBtc} BTC',
+      'label': 'Daily login +${MiningConstants.dailyLoginBonusEth} ETH',
       'createdAt': ServerValue.timestamp,
     });
     return true;

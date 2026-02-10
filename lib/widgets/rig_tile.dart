@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:btc_ads/theme/app_colors.dart';
+import 'package:btc_ads/theme/app_theme.dart';
 
 class RigTile extends StatelessWidget {
   const RigTile({
@@ -25,31 +27,29 @@ class RigTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: isLocked ? Colors.grey.shade50 : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isLocked ? AppColors.cardTint : AppColors.card,
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         border: Border.all(
-          color: isLocked
-              ? Colors.grey.shade300
-              : Colors.purple.shade200,
+          color: isLocked ? AppColors.border : AppColors.primary.withOpacity(0.4),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isLocked
-                ? Colors.black.withOpacity(0.02)
-                : Colors.purple.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: isLocked
+            ? AppTheme.cardShadow
+            : [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: isLocked ? onTap : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.cardRadius),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: AppTheme.cardPadding,
             child: Row(
               children: [
                 // Icon Container
@@ -59,27 +59,27 @@ class RigTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: isLocked
                         ? LinearGradient(
-                      colors: [
-                        Colors.grey.shade200,
-                        Colors.grey.shade300,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
-                        : LinearGradient(
-                      colors: [
-                        const Color(0xFFEDE2F4),
-                        const Color(0xFFE5D4F0),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
+                            colors: [
+                              AppColors.border,
+                              AppColors.textSecondary.withOpacity(0.3),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : const LinearGradient(
+                            colors: [
+                              AppColors.primaryLightBg,
+                              AppColors.primaryLight,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    borderRadius: BorderRadius.circular(AppTheme.chipRadius),
                     boxShadow: [
                       BoxShadow(
                         color: isLocked
-                            ? Colors.grey.withOpacity(0.1)
-                            : Colors.purple.withOpacity(0.2),
+                            ? AppColors.border.withOpacity(0.3)
+                            : AppColors.primary.withOpacity(0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -88,8 +88,8 @@ class RigTile extends StatelessWidget {
                   child: Icon(
                     isLocked ? Icons.lock_outline_rounded : Icons.memory,
                     color: isLocked
-                        ? Colors.grey.shade600
-                        : const Color(0xFF7B47C6),
+                        ? AppColors.textSecondary
+                        : AppColors.primary,
                     size: 24,
                   ),
                 ),
@@ -108,8 +108,8 @@ class RigTile extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                                 color: isLocked
-                                    ? Colors.grey.shade600
-                                    : Colors.black,
+                                    ? AppColors.textSecondary
+                                    : AppColors.textPrimary,
                               ),
                             ),
                           ),
@@ -160,7 +160,7 @@ class RigTile extends StatelessWidget {
                             Icon(
                               Icons.shopping_bag_outlined,
                               size: 12,
-                              color: Colors.purple.shade400,
+                              color: AppColors.primary,
                             ),
                           if (isLocked) const SizedBox(width: 4),
                           Text(
@@ -168,8 +168,8 @@ class RigTile extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               color: isLocked
-                                  ? Colors.purple.shade600
-                                  : Colors.grey.shade600,
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
                               fontWeight: isLocked
                                   ? FontWeight.w600
                                   : FontWeight.normal,
@@ -192,7 +192,7 @@ class RigTile extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isLocked
-                            ? Colors.grey.shade200
+                            ? AppColors.border
                             : Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -202,7 +202,7 @@ class RigTile extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                           color: isLocked
-                              ? Colors.grey.shade600
+                              ? AppColors.textSecondary
                               : Colors.blue.shade800,
                         ),
                       ),
@@ -247,7 +247,7 @@ class RigTile extends StatelessWidget {
                         temp,
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                   ],
@@ -256,7 +256,7 @@ class RigTile extends StatelessWidget {
                   const SizedBox(width: 8),
                   Icon(
                     Icons.chevron_right_rounded,
-                    color: Colors.purple.shade400,
+                    color: AppColors.primary,
                     size: 22,
                   ),
                 ],

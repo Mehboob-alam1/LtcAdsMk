@@ -24,7 +24,7 @@ class UserStats {
   final int? lastSyncAt;
   /// Timestamp (ms) of last daily login claim. Used to allow one claim per calendar day.
   final int? lastDailyClaimAt;
-  /// BTC earned in the current month (capped at MiningConstants.maxBtcPerMonth).
+  /// ETH earned in the current month (capped at MiningConstants.maxEthPerMonth).
   final double earnedThisMonth;
   /// e.g. "2025-02" for monthly cap reset.
   final String monthKey;
@@ -36,7 +36,7 @@ class UserStats {
       balanceBtc: 0.0,
       hashrate: '0 TH/s',
       activeRigs: 0,
-      dailyEarnings: '+0.00000 BTC',
+      dailyEarnings: '+0.00000 ETH',
       sessionUptime: '00:00:00',
       rigEfficiency: 0,
       rewardStreak: 0,
@@ -61,7 +61,7 @@ class UserStats {
       balanceBtc: (balance is num) ? balance.toDouble() : 0.0,
       hashrate: (data['hashrate'] ?? '0 TH/s').toString(),
       activeRigs: (active is num) ? active.toInt() : 0,
-      dailyEarnings: (data['dailyEarnings'] ?? '+0.00000 BTC').toString(),
+      dailyEarnings: (data['dailyEarnings'] ?? '+0.00000 ETH').toString(),
       sessionUptime: (data['sessionUptime'] ?? '00:00:00').toString(),
       rigEfficiency: (efficiency is num) ? efficiency.toInt() : 0,
       rewardStreak: (data['rewardStreak'] is num)

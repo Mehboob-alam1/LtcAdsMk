@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/ad_service.dart';
 import '../services/notification_service.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/native_ad_placeholder.dart';
@@ -396,18 +397,11 @@ class _LuckySpinEntry extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.amber.shade600,
-                Colors.orange.shade600,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            gradient: AppGradients.eth,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.amber.withOpacity(0.3),
+                color: AppColors.primary.withOpacity(0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),

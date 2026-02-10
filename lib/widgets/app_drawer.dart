@@ -10,6 +10,7 @@ import '../services/ad_service.dart';
 import '../models/user_stats.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
 import 'user_avatar.dart';
 
@@ -102,7 +103,7 @@ class AppDrawer extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  '${MiningConstants.formatBtcFull(balance)} BTC',
+                                  '${MiningConstants.formatEthFull(balance)} ETH',
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.w600,
@@ -134,7 +135,7 @@ class AppDrawer extends StatelessWidget {
                             ),
                             SizedBox(width: 6),
                             Text(
-                              '0.00000000 BTC',
+                              '0.00000000 ETH',
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -176,7 +177,7 @@ class AppDrawer extends StatelessWidget {
                       icon: Icons.rocket_launch_rounded,
                       title: 'Boost',
                       subtitle: 'Increase mining rate',
-                      color: Colors.orange,
+                      color: AppColors.primary,
                       onTap: () {
                         AdService.instance.tryShowInterstitialRandomly();
                         Navigator.push(
@@ -192,7 +193,7 @@ class AppDrawer extends StatelessWidget {
                       icon: Icons.card_giftcard_rounded,
                       title: 'Rewards',
                       subtitle: 'Daily login & bonuses',
-                      color: const Color(0xFF7B47C6),
+                      color: AppColors.primary,
                       onTap: () {
                         AdService.instance.tryShowInterstitialRandomly();
                         Navigator.push(
@@ -208,7 +209,7 @@ class AppDrawer extends StatelessWidget {
                       icon: Icons.emoji_events_rounded,
                       title: 'Leaderboard',
                       subtitle: 'Top miners',
-                      color: const Color(0xFFF7931A),
+                      color: AppColors.primary,
                       onTap: () {
                         Navigator.push(
                           context,

@@ -1,27 +1,37 @@
-# Remote Config – Ad IDs JSON
+# Remote Config – Ad parameters (Android only)
 
-Use **remote_config_ad_ids.json** as a reference when setting up Firebase Remote Config.
+**remote_config_parameters.json** is in **Firebase Remote Config template format** so you can import it directly.
 
-## How to use
+- **Import:** Firebase Console → your project → **Engage** → **Remote Config** → **⋮** (menu) → **Import** → choose this JSON file.
+- **iOS** is not included; only Android ad unit IDs.
 
-1. **Replace placeholders** in the JSON:
-   - `XXXXXXXX` = your AdMob/ADX **publisher ID** (e.g. `3940256099942544`)
-   - `YYYYYYYYYY` = your **ad unit ID** for that format (e.g. `6300978111` for banner)
+## If you add parameters manually instead
 
-2. **In Firebase Console** → your project → **Engage** → **Remote Config**:
+1. **Firebase Console** → your project → **Engage** → **Remote Config**.
+2. For each key in the `parameters` section of the JSON:
    - Click **Add parameter**
-   - **Parameter name** = exact key from the JSON (e.g. `banner_adx_android`)
-   - **Default value** = the value from the JSON (after you replaced placeholders)
-   - Repeat for every key you use
+   - **Parameter key** = exact key (e.g. `banner_adx_android`)
+   - **Data type** = see table below
+   - **Default value** = value from the JSON (or your own ad unit IDs)
+3. **Publish** changes.
 
-3. **Publish** your changes in Remote Config.
+## Parameter types (set in Firebase)
 
-## Keys overview
+| Type in Firebase | Keys |
+|------------------|------|
+| **String** | All `*_android` ad unit IDs (banner_adx_android, banner_admob_android, native_*, interstitial_*, rewarded_*, app_open_*). iOS omitted for now. |
+| **Boolean** | `ads_enabled` – single switch to turn all ads on or off |
+| **Number** | `interstitial_chance_percent`, `interstitial_min_interval_seconds`, `boost_multiplier_rewarded`, `boost_duration_minutes` |
 
-| Prefix   | Use |
-|----------|-----|
-| `*_adx_*`    | ADX (Google Ad Manager) – primary |
-| `*_admob_*`  | AdMob – fallback |
-| `*_enabled`  | Turn that ad type on/off (`"true"` or `"false"`) |
+For **Boolean** parameters, in Firebase set type **Boolean** and value `true` or `false` (not the string `"true"`).  
+For **Number** parameters, set type **Number** and the numeric value.
 
-Replace the placeholder IDs with your real unit IDs from [AdMob](https://admob.google.com) and [Ad Manager](https://admanager.google.com).
+## Values in the JSON
+
+- The JSON uses **Google test ad unit IDs** so the app works without your own IDs.
+- For production, replace those values with your real unit IDs from [AdMob](https://admob.google.com) and [Ad Manager](https://admanager.google.com).
+- Ad unit ID format: `ca-app-pub-PUBLISHER_ID/AD_UNIT_ID` (same for AdMob and Ad Manager in most cases).
+
+## Ad logic
+
+The app loads **both** AdMob and AdX for each slot (banner, native, interstitial, rewarded, app open) and shows **whichever loads first**.

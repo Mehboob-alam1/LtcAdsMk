@@ -92,7 +92,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ),
                           child: const Icon(
-                            Icons.currency_bitcoin,
+                            Icons.diamond_rounded,
                             size: 80,
                             color: Colors.white,
                           ),
@@ -114,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: const Column(
                       children: [
                         Text(
-                          'GIGA BTC Mining',
+                          'GIGA ETH Mining',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -124,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Mine Bitcoin, Earn Rewards',
+                          'Mine Ethereum, Earn Rewards',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,

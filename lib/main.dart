@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'theme/app_colors.dart';
+import 'theme/app_theme.dart';
 import 'screens/auth_gate.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
@@ -87,31 +89,30 @@ class _BtcMiningAppState extends State<BtcMiningApp> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFF9B4DCC);
     final baseTextTheme = ThemeData.light().textTheme;
     final spaceGroteskTextTheme = GoogleFonts.spaceGroteskTextTheme(baseTextTheme).copyWith(
       headlineMedium: GoogleFonts.spaceGrotesk(
         fontSize: 24,
         fontWeight: FontWeight.w700,
-        color: const Color(0xFF2E123B),
+        color: AppColors.textPrimary,
       ),
       titleLarge: GoogleFonts.spaceGrotesk(
         fontSize: 20,
         fontWeight: FontWeight.w700,
-        color: const Color(0xFF2E123B),
+        color: AppColors.textPrimary,
       ),
       titleMedium: GoogleFonts.spaceGrotesk(
         fontSize: 16,
         fontWeight: FontWeight.w600,
-        color: const Color(0xFF2E123B),
+        color: AppColors.textPrimary,
       ),
       bodyMedium: GoogleFonts.spaceGrotesk(
         fontSize: 14,
-        color: const Color(0xFF5C5066),
+        color: AppColors.textSecondary,
       ),
       bodyLarge: GoogleFonts.spaceGrotesk(
         fontSize: 16,
-        color: const Color(0xFF5C5066),
+        color: AppColors.textSecondary,
       ),
       labelLarge: GoogleFonts.spaceGrotesk(
         fontSize: 14,
@@ -120,13 +121,21 @@ class _BtcMiningAppState extends State<BtcMiningApp> with WidgetsBindingObserver
     );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'GIGA BTC Mining',
+      title: 'GIGA ETH Mining',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: seed,
-          surface: const Color(0xFFF9F4F7),
+          seedColor: AppColors.primary,
+          surface: AppColors.surface,
+          brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF9F4F7),
+        scaffoldBackgroundColor: AppColors.surface,
+        cardTheme: CardThemeData(
+          color: AppColors.card,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
         textTheme: spaceGroteskTextTheme,
         fontFamily: GoogleFonts.spaceGrotesk().fontFamily,
         useMaterial3: true,

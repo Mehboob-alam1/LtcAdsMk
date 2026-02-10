@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
 
 class BoostTile extends StatelessWidget {
@@ -27,14 +28,14 @@ class BoostTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isActive
-              ? Colors.orange.shade300
-              : Colors.grey.shade200,
+              ? AppColors.primary.withOpacity(0.5)
+              : AppColors.border,
           width: isActive ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isActive
-                ? Colors.orange.withOpacity(0.1)
+                ? AppColors.primary.withOpacity(0.1)
                 : Colors.black.withOpacity(0.03),
             blurRadius: 12,
             offset: const Offset(0, 2),
@@ -56,10 +57,10 @@ class BoostTile extends StatelessWidget {
                   width: 48,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: AppGradients.btc,
+                    gradient: AppGradients.eth,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.orange.withOpacity(0.3),
+                        color: AppColors.primary.withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -96,10 +97,10 @@ class BoostTile extends StatelessWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
+                                color: AppColors.primaryLightBg,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: Colors.orange.shade300,
+                                  color: AppColors.primary.withOpacity(0.4),
                                   width: 1,
                                 ),
                               ),
@@ -110,7 +111,7 @@ class BoostTile extends StatelessWidget {
                                     width: 6,
                                     height: 6,
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.shade600,
+                                      color: AppColors.primary,
                                       shape: BoxShape.circle,
                                     ),
                                   ),
@@ -120,7 +121,7 @@ class BoostTile extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.orange.shade700,
+                                      color: AppColors.primary,
                                     ),
                                   ),
                                 ],
@@ -151,8 +152,8 @@ class BoostTile extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        Colors.orange.shade50,
-                        Colors.orange.shade100,
+                        AppColors.primaryLightBg,
+                        AppColors.primaryLight.withOpacity(0.3),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -161,10 +162,10 @@ class BoostTile extends StatelessWidget {
                   ),
                   child: Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
-                      color: Colors.orange.shade800,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),

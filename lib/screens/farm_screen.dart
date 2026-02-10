@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../constants/mining_constants.dart';
 import '../constants/shop_items.dart';
 import '../models/user_stats.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/ad_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
 import '../widgets/banner_ad_widget.dart';
 import '../widgets/native_ad_placeholder.dart';
@@ -25,11 +28,11 @@ class FarmScreen extends StatelessWidget {
       stream: DatabaseService.instance.statsStream(user.uid),
       builder: (context, statsSnap) {
         final stats = statsSnap.data ?? UserStats.initial();
-        return StreamBuilder<Map<String, dynamic>>(
-          stream: DatabaseService.instance.miningStream(user.uid),
-          builder: (context, miningSnap) {
-            final mining = miningSnap.data ?? {'active': false};
-            final active = mining['active'] == true;
+                        return StreamBuilder<Map<String, dynamic>>(
+                          stream: DatabaseService.instance.miningStream(user.uid),
+                          builder: (context, miningSnap) {
+                            final mining = miningSnap.data ?? {'active': false};
+                            final active = mining['active'] == true;
             return StreamBuilder<Map<String, dynamic>>(
               stream: DatabaseService.instance.shopProgressStream(user.uid),
               builder: (context, shopSnap) {
@@ -41,33 +44,44 @@ class FarmScreen extends StatelessWidget {
                     .where((v) => v)
                     .length;
                 return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppTheme.screenPaddingH,
+                    vertical: AppTheme.screenPaddingV,
+                  ),
                   children: [
                     // Header
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(
-                        'Mining Farm',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 28,
-                        ),
+                      padding: const EdgeInsets.only(bottom: AppTheme.sectionSpacing),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Mining Farm',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 28,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Your ETH mining rigs',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
 
-                    // Mining Status Card - Compact & Modern
+                    // Mining Status Card - ETH theme
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: AppTheme.cardPadding,
                       decoration: BoxDecoration(
-                        gradient: AppGradients.blue,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.blue.withOpacity(0.3),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
+                        gradient: AppGradients.eth,
+                        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+                        boxShadow: AppTheme.balanceCardShadow,
                       ),
                       child: Column(
                         children: [
@@ -131,7 +145,7 @@ class FarmScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      active ? 'Active' : 'Paused',
+                                      active ? 'Mining' : 'Paused',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.w600,
@@ -139,6 +153,24 @@ class FarmScreen extends StatelessWidget {
                                       ),
                                     ),
                                   ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Balance (so user sees balance when mining)
+                          Row(
+                            children: [
+                              Icon(Icons.account_balance_wallet, color: Colors.white.withOpacity(0.8), size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Balance: ${MiningConstants.formatEthFull(stats.balanceBtc)} ETH',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -169,48 +201,6 @@ class FarmScreen extends StatelessWidget {
 
                           const SizedBox(height: 16),
 
-                          // Mining Button - Modern & Sleek
-                          SizedBox(
-                            width: double.infinity,
-                            child: FilledButton(
-                              onPressed: () async {
-                                AdService.instance.tryShowInterstitialRandomly();
-                                if (active) {
-                                  await DatabaseService.instance
-                                      .stopMining(user.uid);
-                                } else {
-                                  await DatabaseService.instance
-                                      .startMining(user.uid);
-                                }
-                              },
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: const Color(0xFF1466FF),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    active ? Icons.pause_circle : Icons.play_circle,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    active ? 'Stop Mining' : 'Start Mining',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                     ),

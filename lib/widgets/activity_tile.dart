@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
 
 class ActivityTile extends StatelessWidget {
@@ -49,7 +50,7 @@ class ActivityTile extends StatelessWidget {
             value,
             style: const TextStyle(
               fontWeight: FontWeight.w700,
-              color: Color(0xFF2E123B),
+              color: AppColors.textPrimary,
             ),
           ),
         ],

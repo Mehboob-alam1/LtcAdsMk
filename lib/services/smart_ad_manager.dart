@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -6,8 +7,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'remote_config_service.dart';
 
-/// Central ad mediation: ADX first, then AdMob. All unit IDs from Firebase Remote Config.
-/// Singleton; initialize early from main() after Firebase & Remote Config.
+/// Central ad mediation: load from BOTH AdMob and AdX (Ad Manager) for each slot;
+/// whichever loads first is shown. Telemetry reports which network filled.
+/// All unit IDs from Firebase Remote Config.
 class SmartAdManager {
   SmartAdManager._();
 
@@ -17,17 +19,21 @@ class SmartAdManager {
 
   bool _sdkInitialized = false;
 
-  // Interstitial & Rewarded: hold loaded ads
-  InterstitialAd? _interstitialAd;
-  bool _interstitialLoaded = false;
-  RewardedAd? _rewardedAd;
-  bool _rewardedLoaded = false;
+  // App Open: single cached ad (winner of race)
   AppOpenAd? _appOpenAd;
   bool _appOpenLoaded = false;
-  DateTime? _lastInterstitialShownAt;
   DateTime? _lastAppOpenShownAt;
 
-  // Native: hold last loaded native ad for UI
+  // Interstitial: dynamic so we can hold InterstitialAd or AdManagerInterstitialAd
+  dynamic _interstitialAd;
+  bool _interstitialLoaded = false;
+  DateTime? _lastInterstitialShownAt;
+
+  // Rewarded
+  RewardedAd? _rewardedAd;
+  bool _rewardedLoaded = false;
+
+  // Native
   NativeAd? _nativeAd;
   bool _nativeLoaded = false;
 
@@ -37,18 +43,19 @@ class SmartAdManager {
   bool get isAppOpenReady => _appOpenLoaded && _appOpenAd != null;
   bool get isNativeReady => _nativeLoaded && _nativeAd != null;
   DateTime? get lastInterstitialShownAt => _lastInterstitialShownAt;
-  /// When the app-open ad was last shown (for cooldown / policy).
   DateTime? get lastAppOpenShownAt => _lastAppOpenShownAt;
 
-  /// Initialize Mobile Ads SDK. Call once from main() after Firebase/Remote Config.
+  /// Optional: log which network loaded for each slot (e.g. "admob" or "adx").
+  void Function(String slot, String network, {String? adUnitId})? onAdLoaded;
+
   static Future<void> initialize() async {
     if (instance._sdkInitialized) return;
     await MobileAds.instance.initialize();
     instance._sdkInitialized = true;
   }
 
-  bool get _isAndroid => !Platform.isIOS;
-  bool get _isIOS => Platform.isIOS;
+  bool get _isAndroid => !kIsWeb && Platform.isAndroid;
+  bool get _isIOS => !kIsWeb && Platform.isIOS;
 
   String get _bannerAdx => _isAndroid ? _config.bannerAdxAndroid : _config.bannerAdxIos;
   String get _bannerAdmob => _isAndroid ? _config.bannerAdmobAndroid : _config.bannerAdmobIos;
@@ -61,228 +68,273 @@ class SmartAdManager {
   String get _appOpenAdx => _isAndroid ? _config.appOpenAdxAndroid : _config.appOpenAdxIos;
   String get _appOpenAdmob => _isAndroid ? _config.appOpenAdmobAndroid : _config.appOpenAdmobIos;
 
-  // --- Banner: ADX then AdMob ---
+  // --- Banner: load both AdMob and AdX, use first that loads; dispose loser ---
   void loadBanner({
     required AdSize size,
-    required void Function(BannerAd?) onResult,
+    required void Function(AdWithView?) onResult,
   }) {
-    if (!_config.bannerAdsEnabled) {
+    if (kIsWeb || !_config.bannerAdsEnabled) {
       onResult(null);
       return;
     }
-    void tryLoad(String adUnitId, {bool isAdmob = false}) {
-      final bannerAd = BannerAd(
-        adUnitId: adUnitId,
-        size: size,
-        request: const AdRequest(),
-        listener: BannerAdListener(
-          onAdLoaded: (loadedAd) => onResult(loadedAd as BannerAd),
-          onAdFailedToLoad: (failedAd, error) {
-            failedAd.dispose();
-            if (isAdmob) {
-              onResult(null);
-            } else {
-              tryLoad(_bannerAdmob, isAdmob: true);
-            }
-          },
-        ),
-      );
-      bannerAd.load();
+    var decided = false;
+    var failed = 0;
+    void win(dynamic ad, String network, String adUnitId) {
+      if (decided) {
+        _disposeBanner(ad);
+        return;
+      }
+      decided = true;
+      onAdLoaded?.call('banner', network, adUnitId: adUnitId);
+      onResult(ad);
     }
-    tryLoad(_bannerAdx);
+    void onFail() {
+      failed++;
+      if (failed == 2 && !decided) {
+        decided = true;
+        onResult(null);
+      }
+    }
+
+    // AdMob banner
+    final bannerAdmob = BannerAd(
+      adUnitId: _bannerAdmob,
+      size: size,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) => win(ad, 'admob', ad.adUnitId),
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          onFail();
+        },
+      ),
+    );
+    bannerAdmob.load();
+
+    // AdX/Ad Manager banner (race in parallel)
+    final adx = AdManagerBannerAd(
+      adUnitId: _bannerAdx,
+      sizes: [size],
+      request: const AdManagerAdRequest(),
+      listener: AdManagerBannerAdListener(
+        onAdLoaded: (ad) {
+          if (decided) {
+            ad.dispose();
+            return;
+          }
+          decided = true;
+          win(ad, 'adx', ad.adUnitId);
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          onFail();
+        },
+      ),
+    );
+    adx.load();
   }
 
-  // --- Native: ADX then AdMob (uses native template, no platform factory) ---
+  void _disposeBanner(dynamic ad) {
+    try {
+      ad.dispose();
+    } catch (_) {}
+  }
+
+  // --- Native: load both, use first that loads. Returns cached ad if already loaded. ---
   void loadNative({
     NativeTemplateStyle? nativeTemplateStyle,
     void Function(NativeAd?)? onResult,
   }) {
-    if (!_config.nativeAdsEnabled) {
+    if (kIsWeb || !_config.nativeAdsEnabled) {
       onResult?.call(null);
       return;
     }
-    final style = nativeTemplateStyle ?? NativeTemplateStyle(templateType: TemplateType.medium);
-    void tryLoad(String adUnitId, {bool isAdmob = false}) {
+    if (_nativeLoaded && _nativeAd != null) {
+      onResult?.call(_nativeAd);
+      return;
+    }
+    final style = nativeTemplateStyle ?? NativeTemplateStyle(templateType: TemplateType.small);
+    var decided = false;
+    void win(NativeAd ad, String network) {
+      if (decided) {
+        ad.dispose();
+        return;
+      }
+      decided = true;
+      _nativeAd?.dispose();
+      _nativeAd = ad;
+      _nativeLoaded = true;
+      onAdLoaded?.call('native', network, adUnitId: ad.adUnitId);
+      onResult?.call(ad);
+    }
+
+    Future<NativeAd> loadAdmob() {
+      final c = Completer<NativeAd>();
       final ad = NativeAd(
-        adUnitId: adUnitId,
+        adUnitId: _nativeAdmob,
         request: const AdRequest(),
         nativeTemplateStyle: style,
         listener: NativeAdListener(
-          onAdLoaded: (loadedAd) {
-            _nativeAd?.dispose();
-            _nativeAd = loadedAd as NativeAd;
-            _nativeLoaded = true;
-            onResult?.call(loadedAd as NativeAd);
+          onAdLoaded: (a) {
+            if (!c.isCompleted) c.complete(a as NativeAd);
           },
-          onAdFailedToLoad: (failedAd, error) {
-            failedAd.dispose();
-            if (isAdmob) {
-              onResult?.call(null);
-            } else {
-              tryLoad(_nativeAdmob, isAdmob: true);
-            }
+          onAdFailedToLoad: (a, e) {
+            a.dispose();
+            if (!c.isCompleted) c.completeError(e);
           },
         ),
       );
       ad.load();
+      return c.future.timeout(const Duration(seconds: 10), onTimeout: () {
+        ad.dispose();
+        throw TimeoutException('Native AdMob');
+      });
     }
-    tryLoad(_nativeAdx);
+
+    Future<NativeAd> loadAdx() {
+      final c = Completer<NativeAd>();
+      final ad = NativeAd(
+        adUnitId: _nativeAdx,
+        request: const AdRequest(),
+        nativeTemplateStyle: style,
+        listener: NativeAdListener(
+          onAdLoaded: (a) {
+            if (!c.isCompleted) c.complete(a as NativeAd);
+          },
+          onAdFailedToLoad: (a, e) {
+            a.dispose();
+            if (!c.isCompleted) c.completeError(e);
+          },
+        ),
+      );
+      ad.load();
+      return c.future.timeout(const Duration(seconds: 10), onTimeout: () {
+        ad.dispose();
+        throw TimeoutException('Native AdX');
+      });
+    }
+
+    var failed = 0;
+    void onFail() {
+      failed++;
+      if (failed == 2 && !decided) {
+        decided = true;
+        onResult?.call(null);
+      }
+    }
+    final f1 = loadAdmob();
+    final f2 = loadAdx();
+    f1.then((ad) {
+      if (!decided) {
+        decided = true;
+        win(ad, 'admob');
+      } else {
+        ad.dispose();
+      }
+    }).catchError((_) => onFail());
+    f2.then((ad) {
+      if (!decided) {
+        decided = true;
+        win(ad, 'adx');
+      } else {
+        ad.dispose();
+      }
+    }).catchError((_) => onFail());
   }
 
   NativeAd? get currentNativeAd => _nativeLoaded ? _nativeAd : null;
 
-  // --- Interstitial: ADX then AdMob ---
-  void loadInterstitial({VoidCallback? onLoaded, VoidCallback? onFailed}) {
-    if (!_config.interstitialAdsEnabled) {
-      onFailed?.call();
-      return;
-    }
-    void tryLoad(String adUnitId, {bool isAdmob = false}) {
-      InterstitialAd.load(
-        adUnitId: adUnitId,
-        request: const AdRequest(),
-        adLoadCallback: InterstitialAdLoadCallback(
-          onAdLoaded: (ad) {
-            _interstitialAd = ad;
-            _interstitialLoaded = true;
-            onLoaded?.call();
-          },
-          onAdFailedToLoad: (error) {
-            if (isAdmob) {
-              onFailed?.call();
-            } else {
-              tryLoad(_interstitialAdmob, isAdmob: true);
-            }
-          },
-        ),
-      );
-    }
-    tryLoad(_interstitialAdx);
-  }
-
-  Future<void> showInterstitial({void Function()? onClosed}) async {
-    if (_interstitialAd == null) {
-      onClosed?.call();
-      return;
-    }
-    final closed = onClosed;
-    _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
-      onAdDismissedFullScreenContent: (ad) {
-        ad.dispose();
-        _interstitialAd = null;
-        _interstitialLoaded = false;
-        _lastInterstitialShownAt = DateTime.now();
-        loadInterstitial();
-        closed?.call();
-      },
-      onAdFailedToShowFullScreenContent: (ad, error) {
-        ad.dispose();
-        _interstitialAd = null;
-        _interstitialLoaded = false;
-        loadInterstitial();
-        closed?.call();
-      },
-    );
-    await _interstitialAd!.show();
-  }
-
-  // --- Rewarded: ADX then AdMob ---
-  void loadRewarded({VoidCallback? onLoaded, VoidCallback? onFailed}) {
-    if (!_config.rewardedAdsEnabled) {
-      onFailed?.call();
-      return;
-    }
-    void tryLoad(String adUnitId, {bool isAdmob = false}) {
-      RewardedAd.load(
-        adUnitId: adUnitId,
-        request: const AdRequest(),
-        rewardedAdLoadCallback: RewardedAdLoadCallback(
-          onAdLoaded: (ad) {
-            _rewardedAd = ad;
-            _rewardedLoaded = true;
-            ad.fullScreenContentCallback = FullScreenContentCallback(
-              onAdDismissedFullScreenContent: (ad) {
-                ad.dispose();
-                _rewardedAd = null;
-                _rewardedLoaded = false;
-                loadRewarded();
-              },
-              onAdFailedToShowFullScreenContent: (ad, error) {
-                ad.dispose();
-                _rewardedAd = null;
-                _rewardedLoaded = false;
-                loadRewarded();
-              },
-            );
-            onLoaded?.call();
-          },
-          onAdFailedToLoad: (error) {
-            if (isAdmob) {
-              onFailed?.call();
-            } else {
-              tryLoad(_rewardedAdmob, isAdmob: true);
-            }
-          },
-        ),
-      );
-    }
-    tryLoad(_rewardedAdx);
-  }
-
-  Future<void> showRewarded({
-    required void Function() onReward,
-    void Function(String)? onFailed,
-  }) async {
-    if (_rewardedAd == null) {
-      onFailed?.call('Ad not ready');
-      return;
-    }
-    await _rewardedAd!.show(
-      onUserEarnedReward: (ad, reward) => onReward(),
-    );
-  }
-
-  // --- App Open: ADX then AdMob ---
+  // --- App Open: load both, cache first; dispose loser when it loads ---
   void loadAppOpen({VoidCallback? onLoaded, VoidCallback? onFailed}) {
-    if (!_config.appOpenAdsEnabled) {
+    if (kIsWeb || !_config.appOpenAdsEnabled) {
       onFailed?.call();
       return;
     }
-    void tryLoad(String adUnitId, {bool isAdmob = false}) {
+    if (_appOpenLoaded && _appOpenAd != null) {
+      onLoaded?.call();
+      return;
+    }
+
+    AppOpenAd? winner;
+    void setWinner(AppOpenAd ad, String network) {
+      if (winner != null) {
+        ad.dispose();
+        return;
+      }
+      winner = ad;
+      _appOpenAd?.dispose();
+      _appOpenAd = ad;
+      _appOpenLoaded = true;
+      onAdLoaded?.call('app_open', network, adUnitId: ad.adUnitId);
+      ad.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (a) {
+          a.dispose();
+          _appOpenAd = null;
+          _appOpenLoaded = false;
+          loadAppOpen();
+        },
+        onAdFailedToShowFullScreenContent: (a, _) {
+          a.dispose();
+          _appOpenAd = null;
+          _appOpenLoaded = false;
+          loadAppOpen();
+        },
+      );
+      onLoaded?.call();
+    }
+
+    Future<AppOpenAd> loadAdmob() {
+      final c = Completer<AppOpenAd>();
       AppOpenAd.load(
-        adUnitId: adUnitId,
+        adUnitId: _appOpenAdmob,
         request: const AdRequest(),
         adLoadCallback: AppOpenAdLoadCallback(
           onAdLoaded: (ad) {
-            _appOpenAd = ad;
-            _appOpenLoaded = true;
-            ad.fullScreenContentCallback = FullScreenContentCallback(
-              onAdDismissedFullScreenContent: (ad) {
-                ad.dispose();
-                _appOpenAd = null;
-                _appOpenLoaded = false;
-                loadAppOpen();
-              },
-              onAdFailedToShowFullScreenContent: (ad, error) {
-                ad.dispose();
-                _appOpenAd = null;
-                _appOpenLoaded = false;
-                loadAppOpen();
-              },
-            );
-            onLoaded?.call();
+            if (!c.isCompleted) c.complete(ad);
           },
           onAdFailedToLoad: (error) {
-            if (isAdmob) {
-              onFailed?.call();
-            } else {
-              tryLoad(_appOpenAdmob, isAdmob: true);
-            }
+            if (!c.isCompleted) c.completeError(error);
           },
         ),
       );
+      return c.future.timeout(const Duration(seconds: 8), onTimeout: () {
+        throw TimeoutException('AppOpen AdMob');
+      });
     }
-    tryLoad(_appOpenAdx);
+
+    Future<AppOpenAd> loadAdx() {
+      final c = Completer<AppOpenAd>();
+      AppOpenAd.loadWithAdManagerAdRequest(
+        adUnitId: _appOpenAdx,
+        adManagerAdRequest: const AdManagerAdRequest(),
+        adLoadCallback: AppOpenAdLoadCallback(
+          onAdLoaded: (ad) {
+            if (!c.isCompleted) c.complete(ad);
+          },
+          onAdFailedToLoad: (error) {
+            if (!c.isCompleted) c.completeError(error);
+          },
+        ),
+      );
+      return c.future.timeout(const Duration(seconds: 8), onTimeout: () {
+        throw TimeoutException('AppOpen AdX');
+      });
+    }
+
+    final fAdmob = loadAdmob();
+    final fAdx = loadAdx();
+    Future.any([fAdmob, fAdx]).then((ad) {
+      final network = ad.adUnitId == _appOpenAdmob ? 'admob' : 'adx';
+      setWinner(ad, network);
+    }).catchError((_) {
+      onFailed?.call();
+    });
+    fAdmob.then((ad) {
+      if (winner != null && winner != ad) ad.dispose();
+    }).catchError((_) {});
+    fAdx.then((ad) {
+      if (winner != null && winner != ad) ad.dispose();
+    }).catchError((_) {});
   }
 
   Future<void> showAppOpen({void Function()? onClosed}) async {
@@ -310,7 +362,212 @@ class SmartAdManager {
     await _appOpenAd!.show();
   }
 
-  /// Interstitial: show with probability and min interval (from Remote Config). Non-blocking.
+  // --- Interstitial: load both, show first that loads ---
+  void loadInterstitial({VoidCallback? onLoaded, VoidCallback? onFailed}) {
+    if (kIsWeb || !_config.interstitialAdsEnabled) {
+      onFailed?.call();
+      return;
+    }
+
+    dynamic winner;
+    void setWinner(dynamic ad, String network) {
+      if (winner != null) {
+        try {
+          ad.dispose();
+        } catch (_) {}
+        return;
+      }
+      winner = ad;
+      _interstitialAd?.dispose();
+      _interstitialAd = ad;
+      _interstitialLoaded = true;
+      final unitId = (ad is InterstitialAd) ? ad.adUnitId : (ad as AdManagerInterstitialAd).adUnitId;
+      onAdLoaded?.call('interstitial', network, adUnitId: unitId);
+      onLoaded?.call();
+    }
+
+    Future<InterstitialAd> loadAdmob() {
+      final c = Completer<InterstitialAd>();
+      InterstitialAd.load(
+        adUnitId: _interstitialAdmob,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (ad) {
+            if (!c.isCompleted) c.complete(ad);
+          },
+          onAdFailedToLoad: (error) {
+            if (!c.isCompleted) c.completeError(error);
+          },
+        ),
+      );
+      return c.future.timeout(const Duration(seconds: 10), onTimeout: () {
+        throw TimeoutException('Interstitial AdMob');
+      });
+    }
+
+    Future<AdManagerInterstitialAd> loadAdx() {
+      final c = Completer<AdManagerInterstitialAd>();
+      AdManagerInterstitialAd.load(
+        adUnitId: _interstitialAdx,
+        request: const AdManagerAdRequest(),
+        adLoadCallback: AdManagerInterstitialAdLoadCallback(
+          onAdLoaded: (ad) {
+            if (!c.isCompleted) c.complete(ad);
+          },
+          onAdFailedToLoad: (error) {
+            if (!c.isCompleted) c.completeError(error);
+          },
+        ),
+      );
+      return c.future.timeout(const Duration(seconds: 10), onTimeout: () {
+        throw TimeoutException('Interstitial AdX');
+      });
+    }
+
+    final fAdmob = loadAdmob();
+    final fAdx = loadAdx();
+    Future.any<dynamic>([fAdmob, fAdx]).then((ad) {
+      final network = (ad is InterstitialAd && ad.adUnitId == _interstitialAdmob) ? 'admob' : 'adx';
+      setWinner(ad, network);
+    }).catchError((_) {
+      onFailed?.call();
+    });
+    fAdmob.then((ad) {
+      if (winner != null && winner != ad) ad.dispose();
+    }).catchError((_) {});
+    fAdx.then((ad) {
+      if (winner != null && winner != ad) ad.dispose();
+    }).catchError((_) {});
+  }
+
+  Future<void> showInterstitial({void Function()? onClosed}) async {
+    if (_interstitialAd == null) {
+      onClosed?.call();
+      return;
+    }
+    final ad = _interstitialAd;
+    final closed = onClosed;
+    ad.fullScreenContentCallback = FullScreenContentCallback(
+      onAdDismissedFullScreenContent: (a) {
+        (a as dynamic)?.dispose();
+        _interstitialAd = null;
+        _interstitialLoaded = false;
+        loadInterstitial();
+        closed?.call();
+      },
+      onAdFailedToShowFullScreenContent: (a, error) {
+        (a as dynamic)?.dispose();
+        _interstitialAd = null;
+        _interstitialLoaded = false;
+        loadInterstitial();
+        closed?.call();
+      },
+    );
+    await ad.show();
+  }
+
+  // --- Rewarded: load both, use first that loads ---
+  void loadRewarded({VoidCallback? onLoaded, VoidCallback? onFailed}) {
+    if (kIsWeb || !_config.rewardedAdsEnabled) {
+      onFailed?.call();
+      return;
+    }
+
+    RewardedAd? winner;
+    void setWinner(RewardedAd ad, String network) {
+      if (winner != null) {
+        ad.dispose();
+        return;
+      }
+      winner = ad;
+      _rewardedAd?.dispose();
+      _rewardedAd = ad;
+      _rewardedLoaded = true;
+      onAdLoaded?.call('rewarded', network, adUnitId: ad.adUnitId);
+      ad.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (a) {
+          a.dispose();
+          _rewardedAd = null;
+          _rewardedLoaded = false;
+          loadRewarded();
+        },
+        onAdFailedToShowFullScreenContent: (a, error) {
+          a.dispose();
+          _rewardedAd = null;
+          _rewardedLoaded = false;
+          loadRewarded();
+        },
+      );
+      onLoaded?.call();
+    }
+
+    Future<RewardedAd> loadAdmob() {
+      final c = Completer<RewardedAd>();
+      RewardedAd.load(
+        adUnitId: _rewardedAdmob,
+        request: const AdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (ad) {
+            if (!c.isCompleted) c.complete(ad);
+          },
+          onAdFailedToLoad: (error) {
+            if (!c.isCompleted) c.completeError(error);
+          },
+        ),
+      );
+      return c.future.timeout(const Duration(seconds: 12), onTimeout: () {
+        throw TimeoutException('Rewarded AdMob');
+      });
+    }
+
+    Future<RewardedAd> loadAdx() {
+      final c = Completer<RewardedAd>();
+      RewardedAd.loadWithAdManagerAdRequest(
+        adUnitId: _rewardedAdx,
+        adManagerRequest: const AdManagerAdRequest(),
+        rewardedAdLoadCallback: RewardedAdLoadCallback(
+          onAdLoaded: (ad) {
+            if (!c.isCompleted) c.complete(ad);
+          },
+          onAdFailedToLoad: (error) {
+            if (!c.isCompleted) c.completeError(error);
+          },
+        ),
+      );
+      return c.future.timeout(const Duration(seconds: 12), onTimeout: () {
+        throw TimeoutException('Rewarded AdX');
+      });
+    }
+
+    final fAdmob = loadAdmob();
+    final fAdx = loadAdx();
+    Future.any([fAdmob, fAdx]).then((ad) {
+      final network = ad.adUnitId == _rewardedAdmob ? 'admob' : 'adx';
+      setWinner(ad, network);
+    }).catchError((_) {
+      onFailed?.call();
+    });
+    fAdmob.then((ad) {
+      if (winner != null && winner != ad) ad.dispose();
+    }).catchError((_) {});
+    fAdx.then((ad) {
+      if (winner != null && winner != ad) ad.dispose();
+    }).catchError((_) {});
+  }
+
+  Future<void> showRewarded({
+    required void Function() onReward,
+    void Function(String)? onFailed,
+  }) async {
+    if (_rewardedAd == null) {
+      onFailed?.call('Ad not ready');
+      return;
+    }
+    await _rewardedAd!.show(
+      onUserEarnedReward: (ad, reward) => onReward(),
+    );
+  }
+
   Future<void> tryShowInterstitialRandomly() async {
     if (!_config.interstitialAdsEnabled) return;
     if (!isInterstitialReady) return;
