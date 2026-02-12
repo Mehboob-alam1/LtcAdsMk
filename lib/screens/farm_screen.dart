@@ -65,7 +65,7 @@ class FarmScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Your Kaspa mining rigs',
+                            'Your Litecoin mining rigs',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.textSecondary,
@@ -166,7 +166,7 @@ class FarmScreen extends StatelessWidget {
                               Icon(Icons.account_balance_wallet, color: Colors.white.withOpacity(0.8), size: 18),
                               const SizedBox(width: 8),
                               Text(
-                                'Balance: ${MiningConstants.formatBtcFull(stats.balanceBtc)} KAS',
+                                'Balance: ${MiningConstants.formatBtcFull(stats.balanceBtc)} LTC',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,

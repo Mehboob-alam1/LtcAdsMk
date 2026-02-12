@@ -84,7 +84,7 @@ class AppDrawer extends StatelessWidget {
                                   builder: (context, snapshot) {
                                     final balance = snapshot.data?.balanceBtc ?? 0.0;
                                     return Text(
-                                      '${MiningConstants.formatBtcFull(balance)} KAS',
+                                      '${MiningConstants.formatBtcFull(balance)} LTC',
                                       style: TextStyle(
                                         color: Colors.white.withOpacity(0.95),
                                         fontWeight: FontWeight.w600,

@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "1006374869942",
-    "project_id": "kasadsmk",
-    "storage_bucket": "kasadsmk.firebasestorage.app"
+    "project_number": "596697920383",
+    "firebase_url": "https://ltcadsmk-default-rtdb.firebaseio.com",
+    "project_id": "ltcadsmk",
+    "storage_bucket": "ltcadsmk.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1006374869942:android:cc0c97b3dfc659a9853f17",
+        "mobilesdk_app_id": "1:596697920383:android:d9989f05c029001fff204a",
         "android_client_info": {
-          "package_name": "com.kaspa.earn.cloudmining.kaspamining.giga"
+          "package_name": "com.ltcgiga.earn.cloudmining.ltcmining.giga"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "596697920383-a81e70imj0sbdbaacangh24daaa5e2ve.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyB3V0OOuhq-022BT3ixWNcPOcIecVozjBw"
+          "current_key": "AIzaSyBR5GUYF8dMT-rwixMFLc2eQ7jN2vS9A_0"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "596697920383-a81e70imj0sbdbaacangh24daaa5e2ve.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "596697920383-278981abanl9i8eun9mi7bhg96nr8s2l.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ltcgiga.earn.cloudmining.ltcmining.giga"
+              }
+            }
+          ]
         }
       }
     }

@@ -78,7 +78,7 @@ class TransactionsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Reach ~\$100 worth of KAS to request your first withdrawal.',
+                      'Reach ~\$100 worth of LTC to request your first withdrawal.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.grey.shade600,

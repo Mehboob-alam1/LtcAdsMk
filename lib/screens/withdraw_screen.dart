@@ -4,7 +4,7 @@ import '../constants/mining_constants.dart';
 import '../services/ad_service.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
-import '../services/kas_price_service.dart';
+import '../services/ltc_price_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_gradients.dart';
@@ -12,7 +12,7 @@ import '../widgets/app_text_field.dart';
 import '../widgets/native_ad_placeholder.dart';
 
 const _networks = [
-  'Kaspa',
+  'Litecoin',
   'Polygon',
   'Arbitrum One',
   'Optimism',
@@ -32,7 +32,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
   bool _loading = false;
   double? _currentBalance;
   double? _fetchedBalance;
-  double? _kasPriceUsd;
+  double? _ltcPriceUsd;
   int _withdrawAdsWatched = 0;
   String _selectedNetwork = _networks[0];
 
@@ -41,7 +41,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       AdService.instance.tryShowInterstitialRandomly();
-      _loadKasPrice();
+      _loadLtcPrice();
       _loadWithdrawAdsProgress();
       _fetchBalanceOnce();
       AdService.instance.loadRewardedAd();
@@ -55,9 +55,9 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     if (mounted) setState(() => _fetchedBalance = stats.balanceBtc);
   }
 
-  Future<void> _loadKasPrice() async {
-    final price = await KasPriceService.instance.getCurrentPrice();
-    if (mounted) setState(() => _kasPriceUsd = price);
+  Future<void> _loadLtcPrice() async {
+    final price = await LtcPriceService.instance.getCurrentPrice();
+    if (mounted) setState(() => _ltcPriceUsd = price);
   }
 
   Future<void> _loadWithdrawAdsProgress() async {
@@ -74,23 +74,23 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
     super.dispose();
   }
 
-  double? get _minKasForWithdraw {
-    if (_kasPriceUsd == null || _kasPriceUsd! <= 0) return null;
-    return MiningConstants.effectiveWithdrawThresholdUsd / _kasPriceUsd!;
+  double? get _minLtcForWithdraw {
+    if (_ltcPriceUsd == null || _ltcPriceUsd! <= 0) return null;
+    return MiningConstants.effectiveWithdrawThresholdUsd / _ltcPriceUsd!;
   }
 
   /// True when balance (in USD) meets or exceeds the minimum withdrawal threshold.
   bool _canWithdraw(double balance) {
-    if (_kasPriceUsd == null || _kasPriceUsd! <= 0) return false;
+    if (_ltcPriceUsd == null || _ltcPriceUsd! <= 0) return false;
     const toleranceUsd = 0.001;
-    return balance * _kasPriceUsd! >= MiningConstants.effectiveWithdrawThresholdUsd - toleranceUsd;
+    return balance * _ltcPriceUsd! >= MiningConstants.effectiveWithdrawThresholdUsd - toleranceUsd;
   }
 
-  /// Only show "need X KAS more" when shortfall is meaningful.
-  bool _shouldShowKeepMining(double balance, double? minKas) {
-    if (minKas == null || _canWithdraw(balance)) return false;
-    const minShortfallKas = 0.01;
-    return (minKas - balance) > minShortfallKas;
+  /// Only show "need X LTC more" when shortfall is meaningful.
+  bool _shouldShowKeepMining(double balance, double? minLtc) {
+    if (minLtc == null || _canWithdraw(balance)) return false;
+    const minShortfallLtc = 0.00001;
+    return (minLtc - balance) > minShortfallLtc;
   }
 
   bool get _hasCompletedWithdrawAds => _withdrawAdsWatched >= DatabaseService.withdrawAdsRequired;
@@ -163,15 +163,15 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       );
       return;
     }
-    final amountStr = _amountController.text.trim().replaceAll(RegExp(r'\s*KAS\s*', caseSensitive: false), '').trim();
+    final amountStr = _amountController.text.trim().replaceAll(RegExp(r'\s*LTC\s*', caseSensitive: false), '').trim();
     final amount = double.tryParse(amountStr);
-    final minKas = _minKasForWithdraw;
-    if (amount == null || minKas == null || amount < minKas) {
+    final minLtc = _minLtcForWithdraw;
+    if (amount == null || minLtc == null || amount < minLtc) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            minKas != null
-                ? 'Minimum withdrawal is ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)} worth (${MiningConstants.formatBtcFull(minKas)} KAS).'
+            minLtc != null
+                ? 'Minimum withdrawal is ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)} worth (${MiningConstants.formatBtcFull(minLtc)} LTC).'
                 : 'Loading price…',
           ),
         ),
@@ -190,7 +190,7 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
       uid: user.uid,
       wallet: _walletController.text.trim(),
       network: _selectedNetwork,
-      amount: '$amountStr KAS',
+      amount: '$amountStr LTC',
     );
     if (!mounted) return;
     setState(() => _loading = false);
@@ -218,8 +218,8 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
           _currentBalance = snap.data?.balanceBtc ?? _fetchedBalance;
           final balance = _currentBalance ?? 0.0;
           final canWithdraw = _canWithdraw(balance);
-          final minKas = _minKasForWithdraw;
-          final balanceUsd = _kasPriceUsd != null ? balance * _kasPriceUsd! : null;
+          final minLtc = _minLtcForWithdraw;
+          final balanceUsd = _ltcPriceUsd != null ? balance * _ltcPriceUsd! : null;
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -234,17 +234,17 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Withdraw KAS when balance is ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)} worth.',
+                      'Withdraw LTC when balance is ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)} worth.',
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Balance: ${MiningConstants.formatBtcFull(balance)} KAS${balanceUsd != null ? ' (≈ \$${balanceUsd.toStringAsFixed(2)})' : ''}',
+                      'Balance: ${MiningConstants.formatBtcFull(balance)} LTC${balanceUsd != null ? ' (≈ \$${balanceUsd.toStringAsFixed(2)})' : ''}',
                       style: const TextStyle(color: Colors.white70, fontSize: 14),
                     ),
                     Text(
-                      minKas != null
-                          ? 'Min. withdraw: ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)} (${MiningConstants.formatBtcFull(minKas)} KAS)'
+                      minLtc != null
+                          ? 'Min. withdraw: ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)} (${MiningConstants.formatBtcFull(minLtc)} LTC)'
                           : 'Min. withdraw: loading…',
                       style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
@@ -327,11 +327,11 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               ],
               const NativeAdPlaceholder(),
               const SizedBox(height: 20),
-              if (_shouldShowKeepMining(balance, minKas))
+              if (_shouldShowKeepMining(balance, minLtc))
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
-                    'Keep mining! You need ${MiningConstants.formatBtcFull((minKas! - balance).clamp(0.0, double.infinity))} KAS more to reach ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)}.',
+                    'Keep mining! You need ${MiningConstants.formatBtcFull((minLtc! - balance).clamp(0.0, double.infinity))} LTC more to reach ~\$${MiningConstants.effectiveWithdrawThresholdUsd.toStringAsFixed(MiningConstants.withdrawTestMode ? 2 : 0)}.',
                     style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                   ),
                 ),
@@ -361,8 +361,8 @@ class _WithdrawScreenState extends State<WithdrawScreen> {
               ),
               const SizedBox(height: 12),
               AppTextField(
-                label: minKas != null ? 'Amount (min ${MiningConstants.formatBtcFull(minKas)} KAS)' : 'Amount (KAS)',
-                hint: '1.2 KAS',
+                label: minLtc != null ? 'Amount (min ${MiningConstants.formatBtcFull(minLtc)} LTC)' : 'Amount (LTC)',
+                hint: '1.2 LTC',
                 controller: _amountController,
               ),
           const SizedBox(height: 20),

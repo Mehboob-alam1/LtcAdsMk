@@ -50,20 +50,23 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyB3V0OOuhq-022BT3ixWNcPOcIecVozjBw',
-    appId: '1:1006374869942:android:cc0c97b3dfc659a9853f17',
-    messagingSenderId: '1006374869942',
-    projectId: 'kasadsmk',
-    storageBucket: 'kasadsmk.firebasestorage.app',
+    apiKey: 'AIzaSyBR5GUYF8dMT-rwixMFLc2eQ7jN2vS9A_0',
+    appId: '1:596697920383:android:d9989f05c029001fff204a',
+    messagingSenderId: '596697920383',
+    projectId: 'ltcadsmk',
+    databaseURL: 'https://ltcadsmk-default-rtdb.firebaseio.com',
+    storageBucket: 'ltcadsmk.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAFZrIuny6sEeKFeZjpmyGLj8zekBWlJY8',
-    appId: '1:1006374869942:ios:a4981f4688e0e491853f17',
-    messagingSenderId: '1006374869942',
-    projectId: 'kasadsmk',
-    storageBucket: 'kasadsmk.firebasestorage.app',
-    iosBundleId: 'com.kaspa.earn.cloudmining.kaspamining.giga',
+    apiKey: 'AIzaSyAdVKineRuWNS09mxvq8D1XLb8MjT7Hcqs',
+    appId: '1:596697920383:ios:068d9ff57ae19549ff204a',
+    messagingSenderId: '596697920383',
+    projectId: 'ltcadsmk',
+    databaseURL: 'https://ltcadsmk-default-rtdb.firebaseio.com',
+    storageBucket: 'ltcadsmk.firebasestorage.app',
+    iosClientId: '596697920383-278981abanl9i8eun9mi7bhg96nr8s2l.apps.googleusercontent.com',
+    iosBundleId: 'com.ltcgiga.earn.cloudmining.ltcmining.giga',
   );
 
 }

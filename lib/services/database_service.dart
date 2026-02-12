@@ -14,7 +14,7 @@ class DatabaseService {
   static final DatabaseService instance = DatabaseService._();
   final FirebaseDatabase _db = FirebaseDatabase.instance;
 
-  /// Base mining rate (KAS/sec). Max ~\$100/month with boosts; controlled by MiningConstants.
+  /// Base mining rate (LTC/sec). Max ~\$100/month with boosts; controlled by MiningConstants.
   static double get miningEarningsPerSecond => MiningConstants.baseEarningsPerSecond;
 
   DatabaseReference _userRef(String uid) => _db.ref('users/$uid');
@@ -180,7 +180,7 @@ class DatabaseService {
     await statsRef.update({'balanceBtc': current + MiningConstants.referralBonusBtc});
     await _userRef(referrerUid).child('activity').push().set({
       'type': 'referral',
-      'label': 'Referral bonus +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} KAS',
+      'label': 'Referral bonus +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} LTC',
       'createdAt': ServerValue.timestamp,
     });
     return true;
@@ -472,7 +472,7 @@ class DatabaseService {
     });
     await _userRef(uid).child('activity').push().set({
       'type': 'daily_login',
-      'label': 'Daily login +${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} KAS',
+      'label': 'Daily login +${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} LTC',
       'createdAt': ServerValue.timestamp,
     });
     return true;

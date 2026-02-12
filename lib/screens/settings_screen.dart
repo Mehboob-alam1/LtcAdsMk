@@ -32,7 +32,7 @@ class SettingsScreen extends StatelessWidget {
             iconColor: Colors.blue,
             title: 'About',
             subtitle:
-            'GIGA Kaspa Mining • Min. withdraw ~\$100 worth of KAS',
+            'GIGA LTC Mining • Min. withdraw ~\$100 worth of LTC',
             onTap: () {
               showDialog(
                 context: context,
@@ -43,7 +43,7 @@ class SettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'GIGA Kaspa Mining',
+                        'GIGA LTC Mining',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -53,7 +53,7 @@ class SettingsScreen extends StatelessWidget {
                       Text('Version 1.0.0'),
                       SizedBox(height: 8),
                       Text(
-                        'Mine KAS, watch ads for boosts.',
+                        'Mine LTC, watch ads for boosts.',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ],

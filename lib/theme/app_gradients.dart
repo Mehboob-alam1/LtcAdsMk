@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Main app gradient (light pink).
+/// Main app gradient (teal).
 class AppGradients {
   static const eth = LinearGradient(
     colors: [AppColors.primaryLight, AppColors.primary],

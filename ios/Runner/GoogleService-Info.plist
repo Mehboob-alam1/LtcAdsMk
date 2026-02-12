@@ -2,18 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>596697920383-278981abanl9i8eun9mi7bhg96nr8s2l.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.596697920383-278981abanl9i8eun9mi7bhg96nr8s2l</string>
 	<key>API_KEY</key>
-	<string>AIzaSyAFZrIuny6sEeKFeZjpmyGLj8zekBWlJY8</string>
+	<string>AIzaSyAdVKineRuWNS09mxvq8D1XLb8MjT7Hcqs</string>
 	<key>GCM_SENDER_ID</key>
-	<string>1006374869942</string>
+	<string>596697920383</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.kaspa.earn.cloudmining.kaspamining.giga</string>
+	<string>com.ltcgiga.earn.cloudmining.ltcmining.giga</string>
 	<key>PROJECT_ID</key>
-	<string>kasadsmk</string>
+	<string>ltcadsmk</string>
 	<key>STORAGE_BUCKET</key>
-	<string>kasadsmk.firebasestorage.app</string>
+	<string>ltcadsmk.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +29,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1006374869942:ios:a4981f4688e0e491853f17</string>
+	<string>1:596697920383:ios:068d9ff57ae19549ff204a</string>
+	<key>DATABASE_URL</key>
+	<string>https://ltcadsmk-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

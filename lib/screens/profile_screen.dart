@@ -121,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.account_balance_wallet,
               iconColor: AppColors.success,
               label: 'Lifetime Earnings',
-              value: '${MiningConstants.formatBtcFull(balance)} KAS',
+              value: '${MiningConstants.formatBtcFull(balance)} LTC',
             );
           },
         ),
@@ -161,7 +161,7 @@ class ProfileScreen extends StatelessWidget {
           iconColor: AppColors.primary,
           label: 'Min. Withdraw',
           value:
-          '~\$100 worth of KAS',
+          '~\$100 worth of LTC',
         ),
 
         const SizedBox(height: AppTheme.sectionSpacing),
@@ -188,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'No withdrawals yet. Reach ~\$100 worth of KAS to withdraw.',
+                        'No withdrawals yet. Reach ~\$100 worth of LTC to withdraw.',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,

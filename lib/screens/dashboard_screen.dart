@@ -11,7 +11,7 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/ad_service.dart';
-import '../services/kas_price_service.dart';
+import '../services/ltc_price_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
@@ -65,9 +65,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     return _stats.hashrate;
   }
 
-  double? _kasPriceUsd;
-  List<KasPricePoint> _kasHistory = [];
-  bool _kasLoading = true;
+  double? _ltcPriceUsd;
+  List<LtcPricePoint> _ltcHistory = [];
+  bool _ltcLoading = true;
+
+  /// LTC price to display: from graph (last point) when chart data is loaded, otherwise from API.
+  double? get _displayLtcPriceUsd {
+    if (_ltcHistory.isNotEmpty) return _ltcHistory.last.priceUsd;
+    return _ltcPriceUsd;
+  }
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -151,21 +157,29 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     _miningSub = DatabaseService.instance.miningStream(user.uid).listen(applyMiningState);
 
-    _loadKasPrice();
+    _loadLtcPrice();
     AdService.instance.loadRewardedAd();
     AdService.instance.loadInterstitialAd();
   }
 
-  Future<void> _loadKasPrice() async {
-    setState(() => _kasLoading = true);
-    final price = await KasPriceService.instance.getCurrentPrice();
-    final history = await KasPriceService.instance.getPriceHistory(days: 7);
-    if (mounted) {
-      setState(() {
-        _kasPriceUsd = price;
-        _kasHistory = history;
-        _kasLoading = false;
-      });
+  Future<void> _loadLtcPrice() async {
+    if (mounted) setState(() => _ltcLoading = true);
+    try {
+      final price = await LtcPriceService.instance.getCurrentPrice();
+      var history = await LtcPriceService.instance.getPriceHistory(days: 7);
+      if (history.isEmpty && price != null) {
+        await Future.delayed(const Duration(milliseconds: 500));
+        history = await LtcPriceService.instance.getPriceHistory(days: 7);
+      }
+      if (mounted) {
+        setState(() {
+          _ltcPriceUsd = price;
+          _ltcHistory = history;
+          _ltcLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _ltcLoading = false);
     }
   }
 
@@ -678,7 +692,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Monitor your Kaspa mining activity',
+            'Monitor your Litecoin mining activity',
             style: TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
@@ -704,7 +718,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  /// Balance and KAS price: side-by-side on wide screens, stacked on narrow.
+  /// Balance and LTC price: side-by-side on wide screens, stacked on narrow.
   Widget _buildBalanceAndPriceSection(double width) {
     if (width > 420) {
       return Row(
@@ -799,7 +813,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                'KAS',
+                'LTC',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.6),
                   fontWeight: FontWeight.w600,
@@ -808,10 +822,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
-          if (_kasPriceUsd != null) ...[
+          if (_displayLtcPriceUsd != null) ...[
               const SizedBox(height: 4),
               Text(
-              '≈ \$${(_liveBalance * _kasPriceUsd!).toStringAsFixed(2)} USD',
+              '≈ \$${(_liveBalance * _displayLtcPriceUsd!).toStringAsFixed(2)} USD',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 13,
@@ -911,7 +925,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Kaspa',
+                        'Litecoin',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -919,7 +933,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ),
                       ),
                       Text(
-                        'KAS / USD',
+                        'LTC / USD',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -929,7 +943,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 ],
               ),
-              if (_kasLoading)
+              if (_ltcLoading)
                 SizedBox(
                   width: 20,
                   height: 20,
@@ -939,43 +953,59 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 )
               else
-                Text(
-                  _kasPriceUsd != null
-                      ? '\$${_formatPrice(_kasPriceUsd!)}'
-                      : '—',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    color: AppColors.textPrimary,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      _displayLtcPriceUsd != null
+                          ? '\$${_formatPrice(_displayLtcPriceUsd!)}'
+                          : '—',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (_ltcHistory.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text(
+                          'From chart',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
             ],
           ),
           const SizedBox(height: 16),
           SizedBox(
             height: 84,
-            child: _kasLoading && _kasHistory.isEmpty
+            child: _ltcLoading && _ltcHistory.isEmpty
                 ? Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.primary,
                     ),
                   )
-                : _buildKasChart(),
+                : _buildLtcChart(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildKasChart() {
-    final points = _kasHistory;
-    final price = _kasPriceUsd;
-    final List<KasPricePoint> chartPoints = points.isNotEmpty
+  Widget _buildLtcChart() {
+    final points = _ltcHistory;
+    final price = _ltcPriceUsd;
+    final List<LtcPricePoint> chartPoints = points.isNotEmpty
         ? points
         : (price != null && price > 0)
             ? _fallbackChartPoints(price)
-            : <KasPricePoint>[];
+            : <LtcPricePoint>[];
     if (chartPoints.isEmpty) {
       return Center(
         child: Text(
@@ -1033,12 +1063,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     return usd.toStringAsFixed(6);
   }
 
-  List<KasPricePoint> _fallbackChartPoints(double currentPrice) {
+  List<LtcPricePoint> _fallbackChartPoints(double currentPrice) {
     final now = DateTime.now().millisecondsSinceEpoch.toDouble();
     final weekAgo = now - 7 * 24 * 60 * 60 * 1000;
     return [
-      KasPricePoint(weekAgo, currentPrice * 0.98),
-      KasPricePoint(now, currentPrice),
+      LtcPricePoint(weekAgo, currentPrice * 0.98),
+      LtcPricePoint(now, currentPrice),
     ];
   }
 

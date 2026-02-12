@@ -1,9 +1,9 @@
-/// Mining limits and rates for Kaspa. Withdrawal at ~\$100 worth of KAS;
+/// Mining limits and rates for Litecoin. Withdrawal at ~\$100 worth of LTC;
 /// mining rate set so user needs ≥1 month (with all boosts) to reach \$100.
 class MiningConstants {
   MiningConstants._();
 
-  /// Withdrawal threshold in USD. User must have mined at least this much worth of KAS.
+  /// Withdrawal threshold in USD. User must have mined at least this much worth of LTC.
   static const double withdrawThresholdUsd = 100.0;
 
   /// When true, minimum balance for withdrawal is ~\$0.01 for dev testing. Production and all test cases use \$100.
@@ -13,14 +13,14 @@ class MiningConstants {
   static double get effectiveWithdrawThresholdUsd =>
       withdrawTestMode ? 0.01 : withdrawThresholdUsd;
 
-  /// Reference KAS price (USD) used for monthly cap. ~\$100/month max = this much KAS.
-  static const double referenceKasPriceUsd = 0.10;
+  /// Reference LTC price (USD) used for monthly cap. ~\$100/month max = this much LTC.
+  static const double referenceLtcPriceUsd = 90.0;
 
-  /// Maximum KAS a user can earn from mining in one month (all boosts apply to this cap).
-  static double get maxKasPerMonth => withdrawThresholdUsd / referenceKasPriceUsd;
+  /// Maximum LTC a user can earn from mining in one month (all boosts apply to this cap).
+  static double get maxLtcPerMonth => withdrawThresholdUsd / referenceLtcPriceUsd;
 
-  /// Minimum KAS required to request withdrawal (at reference price ≈ \$100).
-  static double get minWithdrawKasAtReference => withdrawThresholdUsd / referenceKasPriceUsd;
+  /// Minimum LTC required to request withdrawal (at reference price ≈ \$100).
+  static double get minWithdrawLtcAtReference => withdrawThresholdUsd / referenceLtcPriceUsd;
 
   /// Seconds in 30 days (used for cap and base rate).
   static const int secondsPerMonth = 30 * 24 * 3600;
@@ -28,45 +28,43 @@ class MiningConstants {
   /// Base mining rate per second (no boost). At 1x user gets half of monthly cap;
   /// with 2x boost they can reach cap. So with all perks user needs ≥1 month for \$100.
   static double get baseEarningsPerSecond =>
-      (maxKasPerMonth / 2) / secondsPerMonth;
+      (maxLtcPerMonth / 2) / secondsPerMonth;
 
-  /// Format KAS for display (up to 4 decimal places for readability).
-  static String formatKasFull(double kas) {
-    if (kas == 0) return '0.0000';
-    if (kas >= 1000) return kas.toStringAsFixed(0);
-    if (kas >= 1) return kas.toStringAsFixed(4);
-    return kas.toStringAsFixed(4);
+  /// Format LTC with full decimals (up to 8 decimal places).
+  static String formatLtcFull(double ltc) {
+    if (ltc == 0) return '0.00000000';
+    return ltc.toStringAsFixed(8);
   }
 
-  /// Daily login bonus amount (KAS) per claim.
-  static const double dailyLoginBonusKas = 0.5;
+  /// Daily login bonus amount (LTC) per claim.
+  static const double dailyLoginBonusLtc = 0.0002;
 
-  /// Referral bonus (KAS) for referrer when someone signs up with their code.
-  static const double referralBonusKas = 2.0;
+  /// Referral bonus (LTC) for referrer when someone signs up with their code.
+  static const double referralBonusLtc = 0.001;
 
   /// Default app share URL (Play Store).
   static const String appShareUrl =
-      'https://play.google.com/store/apps/details?id=com.kaspa.earn.cloudmining.kaspamining.giga';
+      'https://play.google.com/store/apps/details?id=com.ltcgiga.earn.cloudmining.ltcmining.giga';
 
-  /// Format very small KAS (e.g. rate per second).
-  static String formatKasRate(double kasPerSec) {
-    if (kasPerSec == 0) return '0.0000';
-    if (kasPerSec >= 0.0001) return kasPerSec.toStringAsFixed(6);
-    return kasPerSec.toStringAsExponential(2);
+  /// Format very small LTC (e.g. rate per second).
+  static String formatLtcRate(double ltcPerSec) {
+    if (ltcPerSec == 0) return '0.00000000';
+    if (ltcPerSec >= 0.00001) return ltcPerSec.toStringAsFixed(8);
+    return ltcPerSec.toStringAsExponential(2);
   }
 
   // Legacy/DB compatibility: API still uses "btc" key for balance
-  static double get maxBtcPerMonth => maxKasPerMonth;
-  static double get maxEthPerMonth => maxKasPerMonth;
-  static String formatBtcFull(double v) => formatKasFull(v);
-  static String formatLtcFull(double v) => formatKasFull(v);
-  static String formatEthFull(double v) => formatKasFull(v);
-  static String formatBtcRate(double v) => formatKasRate(v);
-  static String formatEthRate(double v) => formatKasRate(v);
-  static double get dailyLoginBonusBtc => dailyLoginBonusKas;
-  static double get dailyLoginBonusEth => dailyLoginBonusKas;
-  static double get referralBonusBtc => referralBonusKas;
-  static double get referralBonusEth => referralBonusKas;
-  static double get minWithdrawBtc => minWithdrawKasAtReference;
-  static double get minWithdrawEthAtReference => minWithdrawKasAtReference;
+  static double get maxBtcPerMonth => maxLtcPerMonth;
+  static double get maxEthPerMonth => maxLtcPerMonth;
+  static String formatBtcFull(double v) => formatLtcFull(v);
+  static String formatKasFull(double v) => formatLtcFull(v);
+  static String formatEthFull(double v) => formatLtcFull(v);
+  static String formatBtcRate(double v) => formatLtcRate(v);
+  static String formatEthRate(double v) => formatLtcRate(v);
+  static double get dailyLoginBonusBtc => dailyLoginBonusLtc;
+  static double get dailyLoginBonusEth => dailyLoginBonusLtc;
+  static double get referralBonusBtc => referralBonusLtc;
+  static double get referralBonusEth => referralBonusLtc;
+  static double get minWithdrawBtc => minWithdrawLtcAtReference;
+  static double get minWithdrawEthAtReference => minWithdrawLtcAtReference;
 }

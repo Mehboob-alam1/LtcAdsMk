@@ -1,4 +1,4 @@
-package com.kaspa.earn.cloudmining.kaspamining.giga
+package com.ltcgiga.earn.cloudmining.ltcmining.giga
 
 import io.flutter.embedding.android.FlutterActivity
 

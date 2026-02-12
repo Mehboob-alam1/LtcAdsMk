@@ -76,7 +76,7 @@ class _HomeShellState extends State<HomeShell> {
             ),
             const SizedBox(width: 10),
             Text(
-              'GIGA KAS',
+              'GIGA LTC',
               style: const TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 18,

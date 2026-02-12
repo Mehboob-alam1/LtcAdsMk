@@ -45,7 +45,7 @@ class FcmService {
 
   void _onForegroundMessage(RemoteMessage message) {
     final notification = message.notification;
-    final title = notification?.title ?? message.data['title'] ?? 'GIGA Kaspa Mining';
+    final title = notification?.title ?? message.data['title'] ?? 'GIGA LTC Mining';
     final body = notification?.body ?? message.data['body'] ?? '';
     if (body.isNotEmpty) {
       NotificationService.instance.showFcmNotification(title: title, body: body);

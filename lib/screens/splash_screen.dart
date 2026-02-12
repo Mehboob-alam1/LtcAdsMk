@@ -114,7 +114,7 @@ class _SplashScreenState extends State<SplashScreen>
                     child: const Column(
                       children: [
                         Text(
-                          'GIGA Kaspa Mining',
+                          'GIGA LTC Mining',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 32,
@@ -124,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
                         ),
                         SizedBox(height: 8),
                         Text(
-                          'Mine Kaspa, Earn Rewards',
+                          'Mine Litecoin, Earn Rewards',
                           style: TextStyle(
                             color: Colors.white70,
                             fontSize: 14,

@@ -39,7 +39,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
       if (claimed) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Daily bonus claimed! +${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} KAS'),
+            content: Text('Daily bonus claimed! +${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} LTC'),
             backgroundColor: Colors.green.shade700,
             behavior: SnackBarBehavior.floating,
           ),
@@ -94,7 +94,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Referral applied! +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} KAS to your referrer.'),
+          content: Text('Referral applied! +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} LTC to your referrer.'),
           backgroundColor: Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
         ),
@@ -242,7 +242,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '+${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} KAS',
+                      '+${MiningConstants.formatBtcFull(MiningConstants.dailyLoginBonusBtc)} LTC',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -339,7 +339,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                 builder: (context, codeSnap) {
                   final code = codeSnap.data ?? '------';
                   final appLink = '${MiningConstants.appShareUrl}?ref=$code';
-                  final shareText = 'Join GIGA Kaspa Mining and earn! Use my referral code: $code\n$appLink';
+                  final shareText = 'Join GIGA LTC Mining and earn! Use my referral code: $code\n$appLink';
                   return Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -381,7 +381,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Share your code. You earn +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} KAS per referral.',
+                          'Share your code. You earn +${MiningConstants.formatBtcFull(MiningConstants.referralBonusBtc)} LTC per referral.',
                           style: TextStyle(color: Colors.white.withOpacity(0.95), fontSize: 13),
                         ),
                         const SizedBox(height: 16),
@@ -426,7 +426,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                                 child: FilledButton.icon(
                                   onPressed: () async {
                                     try {
-                                      await Share.share(shareText, subject: 'GIGA Kaspa Mining - Referral');
+                                      await Share.share(shareText, subject: 'GIGA LTC Mining - Referral');
                                     } catch (e) {
                                       if (context.mounted) {
                                         await Clipboard.setData(ClipboardData(text: shareText));
@@ -470,7 +470,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
               const RewardTile(
                 title: 'Referral Pack',
                 subtitle: 'Invite 3 friends',
-                value: '+0.50 KAS',
+                value: '+0.001 LTC',
               ),
               const RewardTile(
                 title: 'Loyalty Tier',

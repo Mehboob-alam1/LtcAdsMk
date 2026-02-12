@@ -14,6 +14,11 @@ class LtcPriceService {
   List<LtcPricePoint>? _lastHistory;
   DateTime? _lastFetch;
 
+  static const _headers = {
+    'Accept': 'application/json',
+    'User-Agent': 'GIGA-LTC-Mining/1.0 (https://example.com)',
+  };
+
   /// Current LTC price in USD. Cached for a short time.
   Future<double?> getCurrentPrice() async {
     if (_lastPrice != null &&
@@ -25,8 +30,8 @@ class LtcPriceService {
       final uri = Uri.parse(
         '$_baseUrl/simple/price?ids=litecoin&vs_currencies=usd',
       );
-      final response = await http.get(uri).timeout(
-        const Duration(seconds: 10),
+      final response = await http.get(uri, headers: _headers).timeout(
+        const Duration(seconds: 15),
       );
       if (response.statusCode != 200) return _lastPrice;
       final map = jsonDecode(response.body) as Map<String, dynamic>;
@@ -40,20 +45,30 @@ class LtcPriceService {
     return _lastPrice;
   }
 
+  DateTime? _lastHistoryFetch;
+
   /// History for chart: last 7 days by default. Returns [timestampMs, price].
   Future<List<LtcPricePoint>> getPriceHistory({int days = 7}) async {
-    if (_lastHistory != null &&
-        _lastFetch != null &&
-        DateTime.now().difference(_lastFetch!).inMinutes < 10) {
-      return _lastHistory!;
+    final cached = _lastHistory;
+    if (cached != null &&
+        cached.isNotEmpty &&
+        _lastHistoryFetch != null &&
+        DateTime.now().difference(_lastHistoryFetch!).inMinutes < 10) {
+      return cached;
     }
     try {
       final uri = Uri.parse(
         '$_baseUrl/coins/litecoin/market_chart?vs_currency=usd&days=$days',
       );
-      final response = await http.get(uri).timeout(
-        const Duration(seconds: 15),
+      var response = await http.get(uri, headers: _headers).timeout(
+        const Duration(seconds: 20),
       );
+      if (response.statusCode == 429) {
+        await Future.delayed(const Duration(seconds: 2));
+        response = await http.get(uri, headers: _headers).timeout(
+          const Duration(seconds: 20),
+        );
+      }
       if (response.statusCode != 200) return _lastHistory ?? [];
       final map = jsonDecode(response.body) as Map<String, dynamic>;
       final prices = map['prices'] as List<dynamic>?;
@@ -71,8 +86,10 @@ class LtcPriceService {
           })
           .whereType<LtcPricePoint>()
           .toList();
-      _lastHistory = list;
-      _lastFetch = DateTime.now();
+      if (list.isNotEmpty) {
+        _lastHistory = list;
+        _lastHistoryFetch = DateTime.now();
+      }
       return list;
     } catch (_) {}
     return _lastHistory ?? [];
