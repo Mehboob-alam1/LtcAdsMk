@@ -65,7 +65,7 @@ class FarmScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Your ETH mining rigs',
+                            'Your Kaspa mining rigs',
                             style: TextStyle(
                               fontSize: 14,
                               color: AppColors.textSecondary,
@@ -75,7 +75,7 @@ class FarmScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Mining Status Card - ETH theme
+                    // Mining Status Card - teal theme
                     Container(
                       padding: AppTheme.cardPadding,
                       decoration: BoxDecoration(
@@ -166,7 +166,7 @@ class FarmScreen extends StatelessWidget {
                               Icon(Icons.account_balance_wallet, color: Colors.white.withOpacity(0.8), size: 18),
                               const SizedBox(width: 8),
                               Text(
-                                'Balance: ${MiningConstants.formatEthFull(stats.balanceBtc)} ETH',
+                                'Balance: ${MiningConstants.formatBtcFull(stats.balanceBtc)} KAS',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,

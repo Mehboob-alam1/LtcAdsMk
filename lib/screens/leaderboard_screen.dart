@@ -134,9 +134,9 @@ class _PodiumCard extends StatelessWidget {
   final bool isCurrentUser;
 
   static const _placeColors = [
-    Color(0xFF497493), // 1st: ETH primary
-    Color(0xFF6B8FA8), // 2nd: ETH light
-    Color(0xFF3A5C73), // 3rd: ETH dark
+    Color(0xFFE11D8C), // 1st: pink primary
+    Color(0xFFF472B6), // 2nd: pink light
+    Color(0xFFBE185D), // 3rd: pink dark
   ];
   static final _placeGradients = [
     LinearGradient(colors: [AppColors.primaryLight, AppColors.primary], begin: Alignment.topLeft, end: Alignment.bottomRight),
@@ -202,7 +202,7 @@ class _PodiumCard extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${MiningConstants.formatEthFull(entry.balanceBtc)} ETH',
+                '${MiningConstants.formatBtcFull(entry.balanceBtc)} KAS',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.95),
                   fontWeight: FontWeight.w700,
@@ -282,7 +282,7 @@ class _LeaderboardListTile extends StatelessWidget {
             ),
           ),
           Text(
-            '${MiningConstants.formatEthFull(entry.balanceBtc)} ETH',
+            '${MiningConstants.formatBtcFull(entry.balanceBtc)} KAS',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13,

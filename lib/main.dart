@@ -126,7 +126,7 @@ class _BtcMiningAppState extends State<BtcMiningApp> with WidgetsBindingObserver
     );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'GIGA ETH Mining',
+      title: 'GIGA Kaspa Mining',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,

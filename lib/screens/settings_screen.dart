@@ -32,7 +32,7 @@ class SettingsScreen extends StatelessWidget {
             iconColor: Colors.blue,
             title: 'About',
             subtitle:
-            'GIGA ETH Mining • Min. withdraw ~\$100 worth of ETH',
+            'GIGA Kaspa Mining • Min. withdraw ~\$100 worth of KAS',
             onTap: () {
               showDialog(
                 context: context,
@@ -43,7 +43,7 @@ class SettingsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'GIGA ETH Mining',
+                        'GIGA Kaspa Mining',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
@@ -53,7 +53,7 @@ class SettingsScreen extends StatelessWidget {
                       Text('Version 1.0.0'),
                       SizedBox(height: 8),
                       Text(
-                        'Mine ETH, watch ads for boosts.',
+                        'Mine KAS, watch ads for boosts.',
                         style: TextStyle(color: Colors.grey),
                       ),
                     ],

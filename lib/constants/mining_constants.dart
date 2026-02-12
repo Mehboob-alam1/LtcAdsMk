@@ -1,9 +1,9 @@
-/// Mining limits and rates for Ethereum. Withdrawal at ~\$100 worth of ETH;
+/// Mining limits and rates for Kaspa. Withdrawal at ~\$100 worth of KAS;
 /// mining rate set so user needs ≥1 month (with all boosts) to reach \$100.
 class MiningConstants {
   MiningConstants._();
 
-  /// Withdrawal threshold in USD. User must have mined at least this much worth of ETH.
+  /// Withdrawal threshold in USD. User must have mined at least this much worth of KAS.
   static const double withdrawThresholdUsd = 100.0;
 
   /// When true, minimum balance for withdrawal is ~\$0.01 for dev testing. Production and all test cases use \$100.
@@ -13,55 +13,60 @@ class MiningConstants {
   static double get effectiveWithdrawThresholdUsd =>
       withdrawTestMode ? 0.01 : withdrawThresholdUsd;
 
-  /// Reference ETH price (USD) used for monthly cap. ~\$100/month max = this much ETH.
-  /// Cap in ETH = withdrawThresholdUsd / referenceEthPriceUsd.
-  static const double referenceEthPriceUsd = 3000.0;
+  /// Reference KAS price (USD) used for monthly cap. ~\$100/month max = this much KAS.
+  static const double referenceKasPriceUsd = 0.10;
 
-  /// Maximum ETH a user can earn from mining in one month (all boosts apply to this cap).
-  /// Set so at reference price the value is withdrawThresholdUsd (~\$100).
-  static double get maxEthPerMonth => withdrawThresholdUsd / referenceEthPriceUsd;
+  /// Maximum KAS a user can earn from mining in one month (all boosts apply to this cap).
+  static double get maxKasPerMonth => withdrawThresholdUsd / referenceKasPriceUsd;
 
-  /// Minimum ETH required to request withdrawal (at reference price ≈ \$100).
-  /// Actual check at withdraw time: balance * ethPriceUsd >= withdrawThresholdUsd.
-  static double get minWithdrawEthAtReference => withdrawThresholdUsd / referenceEthPriceUsd;
+  /// Minimum KAS required to request withdrawal (at reference price ≈ \$100).
+  static double get minWithdrawKasAtReference => withdrawThresholdUsd / referenceKasPriceUsd;
 
   /// Seconds in 30 days (used for cap and base rate).
   static const int secondsPerMonth = 30 * 24 * 3600;
 
   /// Base mining rate per second (no boost). At 1x user gets half of monthly cap;
-  /// with 2x boost they can reach cap. So with all boosts user needs ≥1 month for \$100.
+  /// with 2x boost they can reach cap. So with all perks user needs ≥1 month for \$100.
   static double get baseEarningsPerSecond =>
-      (maxEthPerMonth / 2) / secondsPerMonth;
+      (maxKasPerMonth / 2) / secondsPerMonth;
 
-  /// Format ETH with full decimals (up to 8 decimal places).
-  static String formatEthFull(double eth) {
-    if (eth == 0) return '0.00000000';
-    return eth.toStringAsFixed(8);
+  /// Format KAS for display (up to 4 decimal places for readability).
+  static String formatKasFull(double kas) {
+    if (kas == 0) return '0.0000';
+    if (kas >= 1000) return kas.toStringAsFixed(0);
+    if (kas >= 1) return kas.toStringAsFixed(4);
+    return kas.toStringAsFixed(4);
   }
 
-  /// Daily login bonus amount (ETH) per claim.
-  static const double dailyLoginBonusEth = 0.00002;
+  /// Daily login bonus amount (KAS) per claim.
+  static const double dailyLoginBonusKas = 0.5;
 
-  /// Referral bonus (ETH) for referrer when someone signs up with their code.
-  static const double referralBonusEth = 0.0001;
+  /// Referral bonus (KAS) for referrer when someone signs up with their code.
+  static const double referralBonusKas = 2.0;
 
   /// Default app share URL (Play Store).
   static const String appShareUrl =
-      'https://play.google.com/store/apps/details?id=com.ethgiga.earn.cloudmining.ethmining.giga';
+      'https://play.google.com/store/apps/details?id=com.kaspa.earn.cloudmining.kaspamining.giga';
 
-  /// Format very small ETH (e.g. rate per second).
-  static String formatEthRate(double ethPerSec) {
-    if (ethPerSec == 0) return '0.00000000';
-    if (ethPerSec >= 0.00001) return ethPerSec.toStringAsFixed(8);
-    return ethPerSec.toStringAsExponential(2);
+  /// Format very small KAS (e.g. rate per second).
+  static String formatKasRate(double kasPerSec) {
+    if (kasPerSec == 0) return '0.0000';
+    if (kasPerSec >= 0.0001) return kasPerSec.toStringAsFixed(6);
+    return kasPerSec.toStringAsExponential(2);
   }
 
-  // Legacy names for compatibility where DB/API still use "btc" key
-  static double get maxBtcPerMonth => maxEthPerMonth;
-  static String formatBtcFull(double v) => formatEthFull(v);
-  static String formatBtcRate(double v) => formatEthRate(v);
-  static double get dailyLoginBonusBtc => dailyLoginBonusEth;
-  static double get referralBonusBtc => referralBonusEth;
-  /// For display only; actual withdraw check uses balance * ethPrice >= withdrawThresholdUsd.
-  static double get minWithdrawBtc => minWithdrawEthAtReference;
+  // Legacy/DB compatibility: API still uses "btc" key for balance
+  static double get maxBtcPerMonth => maxKasPerMonth;
+  static double get maxEthPerMonth => maxKasPerMonth;
+  static String formatBtcFull(double v) => formatKasFull(v);
+  static String formatLtcFull(double v) => formatKasFull(v);
+  static String formatEthFull(double v) => formatKasFull(v);
+  static String formatBtcRate(double v) => formatKasRate(v);
+  static String formatEthRate(double v) => formatKasRate(v);
+  static double get dailyLoginBonusBtc => dailyLoginBonusKas;
+  static double get dailyLoginBonusEth => dailyLoginBonusKas;
+  static double get referralBonusBtc => referralBonusKas;
+  static double get referralBonusEth => referralBonusKas;
+  static double get minWithdrawBtc => minWithdrawKasAtReference;
+  static double get minWithdrawEthAtReference => minWithdrawKasAtReference;
 }

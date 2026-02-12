@@ -30,7 +30,7 @@ class ProfileScreen extends StatelessWidget {
         vertical: AppTheme.screenPaddingV,
       ),
       children: [
-        // Profile Header Card - ETH theme
+        // Profile Header Card - teal theme
         Container(
           padding: AppTheme.cardPadding,
           decoration: BoxDecoration(
@@ -111,7 +111,7 @@ class ProfileScreen extends StatelessWidget {
         _buildSectionHeader(context, 'Overview', Icons.insights),
         const SizedBox(height: 12),
 
-        // Stats Grid - ETH theme cards
+        // Stats Grid - teal theme cards
         StreamBuilder<UserStats>(
           stream: DatabaseService.instance.statsStream(user.uid),
           builder: (context, statsSnap) {
@@ -121,7 +121,7 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.account_balance_wallet,
               iconColor: AppColors.success,
               label: 'Lifetime Earnings',
-              value: '${MiningConstants.formatEthFull(balance)} ETH',
+              value: '${MiningConstants.formatBtcFull(balance)} KAS',
             );
           },
         ),
@@ -161,7 +161,7 @@ class ProfileScreen extends StatelessWidget {
           iconColor: AppColors.primary,
           label: 'Min. Withdraw',
           value:
-          '~\$100 worth of ETH',
+          '~\$100 worth of KAS',
         ),
 
         const SizedBox(height: AppTheme.sectionSpacing),
@@ -188,7 +188,7 @@ class ProfileScreen extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'No withdrawals yet. Reach ~\$100 worth of ETH to withdraw.',
+                        'No withdrawals yet. Reach ~\$100 worth of KAS to withdraw.',
                         style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 13,

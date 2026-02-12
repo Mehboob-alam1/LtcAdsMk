@@ -1,37 +1,26 @@
 {
   "project_info": {
-    "project_number": "146428877943",
-    "firebase_url": "https://ethadsmk-default-rtdb.firebaseio.com",
-    "project_id": "ethadsmk",
-    "storage_bucket": "ethadsmk.firebasestorage.app"
+    "project_number": "1006374869942",
+    "project_id": "kasadsmk",
+    "storage_bucket": "kasadsmk.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:146428877943:android:812dfd284d25408befba72",
+        "mobilesdk_app_id": "1:1006374869942:android:cc0c97b3dfc659a9853f17",
         "android_client_info": {
-          "package_name": "com.ethgiga.earn.cloudmining.ethmining.giga"
+          "package_name": "com.kaspa.earn.cloudmining.kaspamining.giga"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "146428877943-hhmd0vvddstlafvq0fhrlh66m1u6fhoc.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAAy7_OY527F1GPnZIxFaj2LjVmY9F21cE"
+          "current_key": "AIzaSyB3V0OOuhq-022BT3ixWNcPOcIecVozjBw"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "146428877943-hhmd0vvddstlafvq0fhrlh66m1u6fhoc.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

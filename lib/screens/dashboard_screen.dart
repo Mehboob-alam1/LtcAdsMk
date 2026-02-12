@@ -11,7 +11,7 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/remote_config_service.dart';
 import '../services/ad_service.dart';
-import '../services/eth_price_service.dart';
+import '../services/kas_price_service.dart';
 import '../services/notification_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
@@ -29,7 +29,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   StreamSubscription<UserStats>? _statsSub;
   StreamSubscription<Map<String, dynamic>>? _miningSub;
   Timer? _timer;
@@ -47,6 +47,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   double _earnedThisMonth = 0.0;
   String _monthKey = '';
   double _sessionEarned = 0.0;
+  DateTime? _backgroundedAt;
 
   double get _baseRate => DatabaseService.miningEarningsPerSecond;
   double get _rigMultiplier => 1.0 + (_stats.rigBonusPercent / 100.0);
@@ -64,9 +65,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     return _stats.hashrate;
   }
 
-  double? _ethPriceUsd;
-  List<EthPricePoint> _ethHistory = [];
-  bool _ethLoading = true;
+  double? _kasPriceUsd;
+  List<KasPricePoint> _kasHistory = [];
+  bool _kasLoading = true;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -74,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -129,6 +131,11 @@ class _DashboardScreenState extends State<DashboardScreen>
             _liveBalance = _stats.balanceBtc;
             _liveUptime = _stats.sessionUptime;
             _sessionEarned = 0.0;
+          } else {
+            _liveBalance = base;
+            _liveUptime = started != null
+                ? _formatDuration(DateTime.now().difference(started))
+                : '00:00:00';
           }
         });
       }
@@ -144,20 +151,20 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     _miningSub = DatabaseService.instance.miningStream(user.uid).listen(applyMiningState);
 
-    _loadEthPrice();
+    _loadKasPrice();
     AdService.instance.loadRewardedAd();
     AdService.instance.loadInterstitialAd();
   }
 
-  Future<void> _loadEthPrice() async {
-    setState(() => _ethLoading = true);
-    final price = await EthPriceService.instance.getCurrentPrice();
-    final history = await EthPriceService.instance.getPriceHistory(days: 7);
+  Future<void> _loadKasPrice() async {
+    setState(() => _kasLoading = true);
+    final price = await KasPriceService.instance.getCurrentPrice();
+    final history = await KasPriceService.instance.getPriceHistory(days: 7);
     if (mounted) {
       setState(() {
-        _ethPriceUsd = price;
-        _ethHistory = history;
-        _ethLoading = false;
+        _kasPriceUsd = price;
+        _kasHistory = history;
+        _kasLoading = false;
       });
     }
   }
@@ -176,6 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _statsSub?.cancel();
     _miningSub?.cancel();
     _timer?.cancel();
@@ -183,9 +191,100 @@ class _DashboardScreenState extends State<DashboardScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _backgroundedAt = DateTime.now();
+    } else if (state == AppLifecycleState.resumed) {
+      _onAppResumed();
+    }
+  }
+
+  Future<void> _onAppResumed() async {
+    if (!_miningActive || _backgroundedAt == null) {
+      _backgroundedAt = null;
+      return;
+    }
+    final user = AuthService.instance.currentUser;
+    if (user == null) {
+      _backgroundedAt = null;
+      return;
+    }
+    _updateBoostFromTime();
+    final now = DateTime.now();
+    final nowMs = now.millisecondsSinceEpoch;
+    final backgroundedAt = _backgroundedAt!;
+    _backgroundedAt = null;
+
+    if (_sessionEndsAtMs != null && nowMs >= _sessionEndsAtMs!) {
+      await DatabaseService.instance.stopMining(
+        user.uid,
+        finalBalanceBtc: _liveBalance,
+        finalSessionUptime: _liveUptime,
+      );
+      await NotificationService.instance.showMiningEnded();
+      if (mounted) {
+        setState(() {
+          _miningActive = false;
+          _liveBalance = _stats.balanceBtc;
+          _sessionEarned = 0.0;
+        });
+      }
+      _stopTicker();
+      return;
+    }
+
+    final elapsed = now.difference(backgroundedAt);
+    final elapsedSec = elapsed.inSeconds.clamp(0, 86400 * 365);
+    if (elapsedSec <= 0) return;
+
+    final remaining =
+        (MiningConstants.maxBtcPerMonth - _earnedThisMonth).clamp(0.0, double.infinity);
+    var catchUp = (elapsedSec * _effectiveRate).clamp(0.0, remaining);
+    if (_sessionEndsAtMs != null) {
+      final sessionEndAt = DateTime.fromMillisecondsSinceEpoch(_sessionEndsAtMs!);
+      final maxEarnSec = sessionEndAt.difference(backgroundedAt).inSeconds.clamp(0, elapsedSec);
+      final maxCatchUp = maxEarnSec * _effectiveRate;
+      if (catchUp > maxCatchUp) catchUp = maxCatchUp.clamp(0.0, remaining);
+    }
+    _sessionEarned += catchUp;
+    _liveBalance = _balanceAtStart + _sessionEarned;
+    _earnedThisMonth += catchUp;
+    _liveUptime = _formatDuration(now.difference(_miningStartedAt ?? now));
+
+    final monthKey = _monthKey.isEmpty
+        ? '${now.year}-${now.month.toString().padLeft(2, '0')}'
+        : _monthKey;
+    await DatabaseService.instance.updateStats(user.uid, {
+      'balanceBtc': _liveBalance,
+      'sessionUptime': _liveUptime,
+      'lastSyncAt': nowMs,
+      'earnedThisMonth': _earnedThisMonth,
+      'monthKey': monthKey,
+    });
+
+    if (mounted) setState(() {});
+  }
+
   void _startTicker() {
     _timer?.cancel();
-    _sessionEarned = 0.0;
+    final startedAt = _miningStartedAt;
+    if (startedAt != null) {
+      final elapsed = DateTime.now().difference(startedAt);
+      final elapsedSec = elapsed.inSeconds.clamp(0, 86400 * 365);
+      final remaining =
+          (MiningConstants.maxBtcPerMonth - _earnedThisMonth).clamp(0.0, double.infinity);
+      final catchUp =
+          (elapsedSec * _effectiveRate).clamp(0.0, remaining);
+      _sessionEarned = catchUp;
+      _liveBalance = _balanceAtStart + _sessionEarned;
+      _earnedThisMonth += catchUp;
+      _liveUptime = _formatDuration(elapsed);
+      if (mounted) setState(() {});
+    } else {
+      _sessionEarned = 0.0;
+    }
     _timer = Timer.periodic(const Duration(seconds: 1), (_) async {
       if (!_miningActive) return;
       final now = DateTime.now();
@@ -529,20 +628,24 @@ class _DashboardScreenState extends State<DashboardScreen>
               children: [
                 _buildHeader(),
                 const SizedBox(height: AppTheme.sectionSpacing),
-                _buildBalanceCard(),
+                LayoutBuilder(
+                  builder: (context, c) => _buildBalanceAndPriceSection(c.maxWidth),
+                ),
+                const SizedBox(height: AppTheme.sectionSpacing),
+                _buildMiningButton(),
                 const SizedBox(height: AppTheme.cardSpacing),
-                _buildBtcPriceCard(),
-                const SizedBox(height: AppTheme.cardSpacing),
+                _buildSectionLabel('Mining stats'),
+                const SizedBox(height: 8),
                 _buildMiningPowerCard(monthCapProgress),
                 const SizedBox(height: AppTheme.cardSpacing),
                 if (RemoteConfigService.instance.rewardedAdsEnabled) ...[
                   _buildBoostSection(),
-                  const SizedBox(height: AppTheme.sectionSpacing),
+                  const SizedBox(height: AppTheme.cardSpacing),
                 ],
-                _buildMiningButton(),
-                const SizedBox(height: AppTheme.sectionSpacing),
                 const NativeAdPlaceholder(key: ValueKey('dashboard_native_ad')),
-                const SizedBox(height: AppTheme.cardSpacing),
+                const SizedBox(height: AppTheme.sectionSpacing),
+                _buildSectionLabel('Recent activity'),
+                const SizedBox(height: 8),
                 KeyedSubtree(
                   key: ValueKey('activity_${user.uid}'),
                   child: _buildActivitySection(user.uid),
@@ -567,7 +670,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           Text(
             'Dashboard',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.5,
               color: AppColors.textPrimary,
@@ -575,14 +678,51 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Monitor your ETH mining activity',
+            'Monitor your Kaspa mining activity',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: AppColors.textSecondary,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSectionLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textSecondary,
+          letterSpacing: 0.3,
+        ),
+      ),
+    );
+  }
+
+  /// Balance and KAS price: side-by-side on wide screens, stacked on narrow.
+  Widget _buildBalanceAndPriceSection(double width) {
+    if (width > 420) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: _buildBalanceCard()),
+          const SizedBox(width: AppTheme.cardSpacing),
+          Expanded(child: _buildBtcPriceCard()),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildBalanceCard(),
+        const SizedBox(height: AppTheme.cardSpacing),
+        _buildBtcPriceCard(),
+      ],
     );
   }
 
@@ -659,7 +799,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                'ETH',
+                'KAS',
                 style: TextStyle(
                   color: Colors.white.withOpacity(0.6),
                   fontWeight: FontWeight.w600,
@@ -668,10 +808,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               ),
             ],
           ),
-          if (_ethPriceUsd != null) ...[
+          if (_kasPriceUsd != null) ...[
               const SizedBox(height: 4),
               Text(
-              '≈ \$${(_liveBalance * _ethPriceUsd!).toStringAsFixed(2)} USD',
+              '≈ \$${(_liveBalance * _kasPriceUsd!).toStringAsFixed(2)} USD',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.5),
                 fontSize: 13,
@@ -771,7 +911,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Ethereum',
+                        'Kaspa',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -779,7 +919,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ),
                       ),
                       Text(
-                        'ETH / USD',
+                        'KAS / USD',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -789,7 +929,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 ],
               ),
-              if (_ethLoading)
+              if (_kasLoading)
                 SizedBox(
                   width: 20,
                   height: 20,
@@ -800,8 +940,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                 )
               else
                 Text(
-                  _ethPriceUsd != null
-                      ? '\$${_ethPriceUsd!.toStringAsFixed(2)}'
+                  _kasPriceUsd != null
+                      ? '\$${_formatPrice(_kasPriceUsd!)}'
                       : '—',
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
@@ -814,35 +954,41 @@ class _DashboardScreenState extends State<DashboardScreen>
           const SizedBox(height: 16),
           SizedBox(
             height: 84,
-            child: _ethHistory.isEmpty
+            child: _kasLoading && _kasHistory.isEmpty
                 ? Center(
-                    child: _ethLoading
-                        ? CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          )
-                        : Text(
-                            'No chart data',
-                            style: TextStyle(
-                              color: AppColors.textSecondary,
-                              fontSize: 13,
-                            ),
-                          ),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
                   )
-                : _buildEthChart(),
+                : _buildKasChart(),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEthChart() {
-    if (_ethHistory.isEmpty) return const SizedBox.shrink();
-    final points = _ethHistory;
-    final minY = points.map((e) => e.priceUsd).reduce((a, b) => a < b ? a : b);
-    final maxY = points.map((e) => e.priceUsd).reduce((a, b) => a > b ? a : b);
-    final span = (maxY - minY).clamp(1.0, double.infinity);
-    final spots = points.asMap().entries.map((e) {
+  Widget _buildKasChart() {
+    final points = _kasHistory;
+    final price = _kasPriceUsd;
+    final List<KasPricePoint> chartPoints = points.isNotEmpty
+        ? points
+        : (price != null && price > 0)
+            ? _fallbackChartPoints(price)
+            : <KasPricePoint>[];
+    if (chartPoints.isEmpty) {
+      return Center(
+        child: Text(
+          'Price data unavailable',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+        ),
+      );
+    }
+    final prices = chartPoints.map((e) => e.priceUsd).toList();
+    final minY = prices.reduce((a, b) => a < b ? a : b);
+    final maxY = prices.reduce((a, b) => a > b ? a : b);
+    final span = (maxY - minY).clamp(0.0001, double.infinity);
+    final spots = chartPoints.asMap().entries.map((e) {
       return FlSpot(e.key.toDouble(), e.value.priceUsd);
     }).toList();
 
@@ -879,6 +1025,21 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
       duration: const Duration(milliseconds: 250),
     );
+  }
+
+  String _formatPrice(double usd) {
+    if (usd >= 1) return usd.toStringAsFixed(2);
+    if (usd >= 0.01) return usd.toStringAsFixed(4);
+    return usd.toStringAsFixed(6);
+  }
+
+  List<KasPricePoint> _fallbackChartPoints(double currentPrice) {
+    final now = DateTime.now().millisecondsSinceEpoch.toDouble();
+    final weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    return [
+      KasPricePoint(weekAgo, currentPrice * 0.98),
+      KasPricePoint(now, currentPrice),
+    ];
   }
 
   String _sessionTimeLeft() {

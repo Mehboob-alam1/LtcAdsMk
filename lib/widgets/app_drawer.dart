@@ -12,6 +12,7 @@ import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_gradients.dart';
+import '../theme/app_theme.dart';
 import 'user_avatar.dart';
 
 class AppDrawer extends StatelessWidget {
@@ -22,136 +23,102 @@ class AppDrawer extends StatelessWidget {
     final user = AuthService.instance.currentUser;
     return Drawer(
       child: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFFFAF8FB), Color(0xFFFFFEFF)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        color: AppColors.surface,
         child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Header Section - Beautiful Gradient Card
+              // Header - Teal gradient card
               Container(
-                margin: const EdgeInsets.all(16),
+                margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: AppGradients.magenta,
-                  borderRadius: BorderRadius.circular(20),
+                  gradient: AppGradients.eth,
+                  borderRadius: BorderRadius.circular(AppTheme.cardRadius),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.purple.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
+                      color: AppColors.primary.withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Avatar with Ring
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 3,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.4),
+                              width: 2,
+                            ),
+                          ),
+                          child: const UserAvatar(size: 52),
                         ),
-                      ),
-                      child: const UserAvatar(size: 64),
-                    ),
-                    const SizedBox(height: 14),
-                    // User Name
-                    Text(
-                      user?.displayName ??
-                          (user?.isAnonymous ?? false
-                              ? 'Guest Miner'
-                              : 'Miner'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    // Balance Display
-                    if (user != null)
-                      StreamBuilder<UserStats>(
-                        stream: DatabaseService.instance.statsStream(user.uid),
-                        builder: (context, snapshot) {
-                          final balance = snapshot.data?.balanceBtc ?? 0.0;
-                          return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.account_balance_wallet,
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?.displayName ??
+                                    (user?.isAnonymous ?? false
+                                        ? 'Guest Miner'
+                                        : 'Miner'),
+                                style: const TextStyle(
                                   color: Colors.white,
-                                  size: 14,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
                                 ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${MiningConstants.formatEthFull(balance)} ETH',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.account_balance_wallet,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                            SizedBox(width: 6),
-                            Text(
-                              '0.00000000 ETH',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              if (user != null)
+                                StreamBuilder<UserStats>(
+                                  stream: DatabaseService.instance.statsStream(user.uid),
+                                  builder: (context, snapshot) {
+                                    final balance = snapshot.data?.balanceBtc ?? 0.0;
+                                    return Text(
+                                      '${MiningConstants.formatBtcFull(balance)} KAS',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.95),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 13,
+                                      ),
+                                    );
+                                  },
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 8),
-
-              // Menu Items
+              const SizedBox(height: 16),
+              Divider(height: 1, color: AppColors.border),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Menu',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(

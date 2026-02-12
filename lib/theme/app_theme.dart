@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// ETH theme: layout and decoration constants.
+/// App theme: layout and decoration constants.
 class AppTheme {
   AppTheme._();
 
-  /// Card corner radius (rounded ETH style).
+  /// Card corner radius (rounded style).
   static const double cardRadius = 20.0;
 
   /// Smaller radius for chips and inner elements.

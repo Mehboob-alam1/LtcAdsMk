@@ -16,7 +16,7 @@ class DisclaimerScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _section('No financial advice', 'The GIGA ETH Mining app is for entertainment and educational purposes only. Nothing in the app constitutes financial, investment, or legal advice. You should not rely on the app for any financial decisions.'),
+          _section('No financial advice', 'The GIGA Kaspa Mining app is for entertainment and educational purposes only. Nothing in the app constitutes financial, investment, or legal advice. You should not rely on the app for any financial decisions.'),
           _section('Simulated mining', 'Mining and rewards in this app are simulated. The app does not perform actual cryptocurrency mining. Balances and payouts are in-app only and subject to the app\'s terms and withdrawal rules.'),
           _section('No guarantee', 'We do not guarantee availability of the service, accuracy of displayed data, or that withdrawals will be processed within any specific time. Service may be modified or discontinued at any time.'),
           _section('Third-party services', 'The app may use third-party services (e.g. ads, analytics). We are not responsible for the content or policies of third parties. Your use of those services is at your own risk.'),

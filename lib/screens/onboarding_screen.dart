@@ -160,9 +160,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   onPageChanged: (value) => setState(() => _page = value),
                   children: [
                     OnboardingPage(
-                      title: 'Mine Ethereum\nEffortlessly',
+                      title: 'Mine Kaspa\nEffortlessly',
                       subtitle:
-                      'Connect to cloud miners and grow your ETH balance with verified mining pools.',
+                      'Connect to cloud miners and grow your KAS balance with verified mining pools.',
                       gradient: AppGradients.btc,
                       icon: Icons.bolt_rounded,
                       pulseAnimation: _pulseAnimation,

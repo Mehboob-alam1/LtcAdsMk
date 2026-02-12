@@ -26,13 +26,19 @@ class _HomeShellState extends State<HomeShell> {
 
   static const int _shopTabIndex = 2;
 
-  List<Widget> get _screens => [
-    const DashboardScreen(),
-    FarmScreen(onOpenShop: () => setState(() => _index = _shopTabIndex)),
-    const ShopScreen(),
-    const TransactionsScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const DashboardScreen(),
+      FarmScreen(onOpenShop: () => setState(() => _index = _shopTabIndex)),
+      const ShopScreen(),
+      const TransactionsScreen(),
+      const ProfileScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,130 +47,84 @@ class _HomeShellState extends State<HomeShell> {
       appBar: AppBar(
         backgroundColor: AppColors.appBar,
         elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
+        leadingWidth: 48,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.card,
-                borderRadius: BorderRadius.circular(AppTheme.chipRadius),
-                border: Border.all(color: AppColors.border),
-                boxShadow: AppTheme.cardShadow,
-              ),
-              child: const Icon(
-                Icons.menu_rounded,
-                size: 22,
-              ),
-            ),
+            icon: const Icon(Icons.menu_rounded, size: 24),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 gradient: AppGradients.eth,
-                borderRadius: BorderRadius.circular(AppTheme.chipRadius),
+                borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    blurRadius: 8,
+                    color: AppColors.primary.withOpacity(0.25),
+                    blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.diamond_rounded,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: const Icon(Icons.diamond_rounded, color: Colors.white, size: 18),
             ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: Text(
-                'GIGA ETH',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 18,
-                  color: AppColors.textPrimary,
-                ),
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(width: 10),
+            Text(
+              'GIGA KAS',
+              style: const TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.3,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
+        centerTitle: true,
         actions: [
           _MiningBadge(),
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: const UserAvatar(size: 36),
+            child: InkWell(
+              onTap: () => Scaffold.of(context).openDrawer(),
+              borderRadius: BorderRadius.circular(20),
+              child: const UserAvatar(size: 34),
             ),
           ),
         ],
       ),
-      body: _screens[_index],
+      body: IndexedStack(
+        index: _index,
+        children: _screens,
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: AppColors.card,
-          border: Border(top: BorderSide(color: AppColors.border)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.04),
-              blurRadius: 16,
-              offset: const Offset(0, -4),
+              color: AppColors.primary.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, -2),
             ),
           ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(
-                  icon: Icons.dashboard_rounded,
-                  label: 'Dashboard',
-                  index: 0,
-                  color: const Color(0xFF1466FF),
-                ),
-                _buildNavItem(
-                  icon: Icons.factory_rounded,
-                  label: 'Farm',
-                  index: 1,
-                  color: const Color(0xFF1CB36B),
-                ),
-                _buildNavItem(
-                  icon: Icons.shopping_bag_rounded,
-                  label: 'Shop',
-                  index: 2,
-                  color: AppColors.primary,
-                ),
-                _buildNavItem(
-                  icon: Icons.receipt_long_rounded,
-                  label: 'History',
-                  index: 3,
-                  color: AppColors.primary,
-                ),
-                _buildNavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  index: 4,
-                  color: AppColors.primary,
-                ),
+                _buildNavItem(icon: Icons.dashboard_rounded, label: 'Home', index: 0),
+                _buildNavItem(icon: Icons.factory_rounded, label: 'Farm', index: 1),
+                _buildNavItem(icon: Icons.shopping_bag_rounded, label: 'Shop', index: 2),
+                _buildNavItem(icon: Icons.receipt_long_rounded, label: 'History', index: 3),
+                _buildNavItem(icon: Icons.person_rounded, label: 'Profile', index: 4),
               ],
             ),
           ),
@@ -177,7 +137,6 @@ class _HomeShellState extends State<HomeShell> {
     required IconData icon,
     required String label,
     required int index,
-    required Color color,
   }) {
     final isSelected = _index == index;
     return Expanded(
@@ -189,33 +148,36 @@ class _HomeShellState extends State<HomeShell> {
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isSelected ? color.withOpacity(0.1) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  size: 24,
-                  color: isSelected ? color : Colors.grey.shade400,
-                ),
+              Icon(
+                icon,
+                size: 24,
+                color: isSelected ? AppColors.primary : AppColors.textSecondary.withOpacity(0.6),
               ),
               const SizedBox(height: 4),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
+              Text(
+                label,
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                  color: isSelected ? color : Colors.grey.shade500,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
                 ),
-                child: Text(label),
+                overflow: TextOverflow.ellipsis,
               ),
+              if (isSelected)
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  height: 3,
+                  width: 24,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
             ],
           ),
         ),
@@ -236,67 +198,36 @@ class _MiningBadge extends StatelessWidget {
       builder: (context, snapshot) {
         final active = snapshot.data?['active'] == true;
         return Container(
-          margin: const EdgeInsets.only(right: 12),
+          margin: const EdgeInsets.only(right: 8),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: active
-                  ? [
-                const Color(0xFFE5FFF1),
-                const Color(0xFFD0FFE5),
-              ]
-                  : [
-                const Color(0xFFFFE8E8),
-                const Color(0xFFFFD6D6),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
+            color: active
+                ? AppColors.primary.withOpacity(0.12)
+                : AppColors.textSecondary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: active
-                  ? const Color(0xFF1CB36B).withOpacity(0.3)
-                  : const Color(0xFFE75A5A).withOpacity(0.3),
-              width: 1.5,
+              color: active ? AppColors.primary.withOpacity(0.4) : AppColors.border,
+              width: 1,
             ),
-            boxShadow: [
-              BoxShadow(
-                color: active
-                    ? const Color(0xFF1CB36B).withOpacity(0.2)
-                    : const Color(0xFFE75A5A).withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                height: 8,
-                width: 8,
+                height: 6,
+                width: 6,
                 decoration: BoxDecoration(
-                  color:
-                  active ? const Color(0xFF1CB36B) : const Color(0xFFE75A5A),
+                  color: active ? AppColors.primary : AppColors.textSecondary,
                   shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: active
-                          ? const Color(0xFF1CB36B).withOpacity(0.5)
-                          : const Color(0xFFE75A5A).withOpacity(0.5),
-                      blurRadius: 4,
-                      spreadRadius: 1,
-                    ),
-                  ],
                 ),
               ),
               const SizedBox(width: 6),
               Text(
-                active ? 'Mining' : 'Paused',
+                active ? 'Live' : 'Paused',
                 style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: active ? const Color(0xFF0F8A4F) : const Color(0xFFD04848),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: active ? AppColors.primary : AppColors.textSecondary,
                 ),
               ),
             ],

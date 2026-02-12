@@ -155,7 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'ETH MINER',
+                            'KAS MINER',
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,

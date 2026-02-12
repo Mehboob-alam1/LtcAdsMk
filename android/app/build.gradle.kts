@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ethgiga.earn.cloudmining.ethmining.giga"
+    namespace = "com.kaspa.earn.cloudmining.kaspamining.giga"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,7 +23,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.ethgiga.earn.cloudmining.ethmining.giga"
+        applicationId = "com.kaspa.earn.cloudmining.kaspamining.giga"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

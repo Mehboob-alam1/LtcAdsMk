@@ -77,7 +77,7 @@ class NotificationService {
       );
       await _plugin.zonedSchedule(
         _hourlyIdStart + i,
-        'GIGA ETH Mining',
+        'GIGA Kaspa Mining',
         _hourlyBodies[i % _hourlyBodies.length],
         tzDate,
         _hourlyDetails,
@@ -91,7 +91,7 @@ class NotificationService {
     'Check your mining progress – tap to open.',
     'Your balance is updating. Open the app to see.',
     'Mining in progress – tap to view your earnings.',
-    'Don’t forget to check your GIGA ETH Mining balance.',
+    'Don’t forget to check your GIGA Kaspa Mining balance.',
   ];
 
   /// Cancel all scheduled hourly reminders.

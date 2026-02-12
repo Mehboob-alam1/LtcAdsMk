@@ -17,7 +17,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           _section('Last updated', 'Please refer to the effective date at the bottom of this policy.'),
-          _section('Information we collect', 'We collect information you provide when you use the GIGA ETH Mining app, including account details, mining session data, and balance information. We may also collect device information and usage data to improve our services.'),
+          _section('Information we collect', 'We collect information you provide when you use the GIGA Kaspa Mining app, including account details, mining session data, and balance information. We may also collect device information and usage data to improve our services.'),
           _section('How we use your information', 'Your information is used to operate the mining service, process withdrawals, show relevant ads, and improve the app. We do not sell your personal data to third parties.'),
           _section('Data storage', 'Data is stored securely using Firebase. Mining and balance data is associated with your account and used only to provide the service.'),
           _section('Third-party services', 'We use Google Mobile Ads for advertisements. Ad providers may collect data according to their own privacy policies. We use Firebase for authentication and database storage.'),

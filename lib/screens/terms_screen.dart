@@ -16,8 +16,8 @@ class TermsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _section('Acceptance of terms', 'By downloading, installing, or using the GIGA ETH Mining app, you agree to these Terms and Conditions. If you do not agree, do not use the app.'),
-          _section('Service description', 'GIGA ETH Mining is an app that simulates mining activity and rewards users with in-app balance. Withdrawals are subject to minimum thresholds and approval. The service is provided "as is."'),
+          _section('Acceptance of terms', 'By downloading, installing, or using the GIGA Kaspa Mining app, you agree to these Terms and Conditions. If you do not agree, do not use the app.'),
+          _section('Service description', 'GIGA Kaspa Mining is an app that simulates mining activity and rewards users with in-app balance. Withdrawals are subject to minimum thresholds and approval. The service is provided "as is."'),
           _section('Eligibility', 'You must be of legal age in your jurisdiction to use this app. You are responsible for compliance with local laws regarding cryptocurrency and rewards.'),
           _section('User account', 'You are responsible for maintaining the confidentiality of your account. You must provide accurate information and notify us of any unauthorized use.'),
           _section('Prohibited conduct', 'You may not use the app for illegal purposes, to abuse or exploit the system, or to violate any applicable laws. We reserve the right to suspend or terminate accounts that violate these terms.'),
